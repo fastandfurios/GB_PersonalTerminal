@@ -26,10 +26,10 @@ namespace ManagerDirectory.Repository
 			return currentPath;
 		}
 
-        public void SaveCurrentPath(CurrentPath currentPath, string fileName)
+        public async Task SaveCurrentPath(CurrentPath currentPath, string fileName)
         {
-            _currentPath = JsonSerializer.Serialize(currentPath);
-            File.WriteAllText(fileName, _currentPath);
+            await JsonSerializer.SerializeAsync(Stream.Null, currentPath, typeof(CurrentPath));
+            await File.WriteAllTextAsync(fileName, _currentPath);
         }
 	}
 }

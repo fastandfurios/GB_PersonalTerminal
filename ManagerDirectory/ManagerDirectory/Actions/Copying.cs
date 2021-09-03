@@ -9,25 +9,34 @@ namespace ManagerDirectory.Actions
 {
     public class Copying
     {
-	    public void Copy(string oldPath, string name, string newPath)
+	    public async Task Copy(string oldPath, string name, string newPath)
 	    {
 		    if (Path.GetExtension(name) != string.Empty)
-		    {
-			    foreach (var file in Directory.GetFiles(oldPath, name, SearchOption.TopDirectoryOnly))
-				    File.Copy(file, file.Replace(oldPath, newPath), true);
+            {
+                await Task.Run(() =>
+                {
+                    foreach (var file in Directory.GetFiles(oldPath, name, SearchOption.TopDirectoryOnly))
+                        File.Copy(file, file.Replace(oldPath, newPath), true);
 
-			    Console.WriteLine($"Копирование прошло успешно!");
-		    }
+                    Console.WriteLine($"Копирование прошло успешно!");
+				});
+            }
 		    else
-		    {
-			    foreach (var directory in Directory.GetDirectories(oldPath, name, SearchOption.TopDirectoryOnly))
-				    Directory.CreateDirectory(directory.Replace(oldPath, newPath));
+            {
+                await Task.WhenAll(Task.Run(() =>
+                    {
+                        foreach (var directory in
+                            Directory.GetDirectories(oldPath, name, SearchOption.TopDirectoryOnly))
+                            Directory.CreateDirectory(directory.Replace(oldPath, newPath));
+                    }),
+                    Task.Run(() =>
+                    {
+                        foreach (var file in Directory.GetFiles(oldPath + name, "*.*", SearchOption.TopDirectoryOnly))
+                            File.Copy(file, file.Replace(oldPath, newPath), true);
 
-			    foreach (var file in Directory.GetFiles(oldPath + name, "*.*", SearchOption.TopDirectoryOnly))
-				    File.Copy(file, file.Replace(oldPath, newPath), true);
-
-			    Console.WriteLine($"Копирование прошло успешно!");
-		    }
+                        Console.WriteLine($"Копирование прошло успешно!");
+                    }));
+            }
 	    }
     }
 }

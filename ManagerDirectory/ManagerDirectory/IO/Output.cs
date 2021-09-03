@@ -17,12 +17,12 @@ namespace ManagerDirectory.IO
 		/// Выводит список директорий и файлов
 		/// </summary>
 		/// <param name="path">Путь</param>
-	    public void OutputTree(string path, int maxObjects)
+	    public async Task OutputTree(string path, int maxObjects)
 	    {
 		    _directory = new DirectoryInfo(path);
-		    int length = _directory.Name.Length / 2;
+		    int length = await Task.Run(() => _directory.Name.Length / 2);
 		    int spaceLength;
-		    var arraySelector = path.Where(s => s == '\\').Select(s => s = '\\').ToList();
+		    var arraySelector = await Task.Run(() => path.Where(s => s == '\\').ToList());
 
 			if (arraySelector.Count > 2)
 				OutputTree(" ~\\" + _directory.Name, arraySelector, _directory.Name.Length / 2 + 2, out spaceLength);
@@ -81,13 +81,16 @@ namespace ManagerDirectory.IO
 		/// <summary>
 		/// Получает список доступных дисков в системе
 		/// </summary>
-	    public void GetDrives()
-	    {
-		    var drives = DriveInfo.GetDrives();
+	    public async Task GetDrives()
+        {
+            await Task.Run(() =>
+            {
+                var drives = DriveInfo.GetDrives();
 
-		    foreach (var drive in drives)
-			    Console.WriteLine($"Имя диска: {drive.Name}");
-	    }
+                foreach (var drive in drives)
+                    Console.WriteLine($"Имя диска: {drive.Name}");
+			});
+        }
 
 	    public void OutputInfoFilesAndDirectory(Informer informer) => Console.WriteLine(informer);
     }

@@ -12,21 +12,21 @@ namespace ManagerDirectory.IO
     {
 	    private string _entry;
 
-		/// <summary>
-		/// Дает пользователю ввести строку
-		/// </summary>
-		/// <param name="defaultPath">Путь по умолчанию</param>
-		/// <param name="checker">Проверщик</param>
-		/// <returns>Строка, введенная пользователем</returns>
-	    public string Input(string defaultPath, Checker checker)
-	    {
-		    do
-		    {
-				Console.Write($"{defaultPath} > ");
-				_entry = Console.ReadLine();
-			} while (!checker.CheckInputCommand(_entry));
+	    public async Task<string> Input(string defaultPath, Checker checker)
+        {
+            return await Task.Run(async () =>
+            {
+                var flag = false;
 
-		    return _entry;
-	    }
+                do
+                {
+                    Console.Write($"{defaultPath} > ");
+                    _entry = Console.ReadLine();
+                    flag = await checker.CheckInputCommand(_entry);
+                } while (!flag);
+
+                return _entry;
+			});
+        }
     }
 }

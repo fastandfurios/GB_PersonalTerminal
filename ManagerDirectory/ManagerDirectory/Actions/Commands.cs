@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ManagerDirectory.Actions
 {
-	public class Commands
+	readonly struct Commands
 	{
 		public string[] ArrayCommands => new string[]
 		{
@@ -22,5 +22,5 @@ namespace ManagerDirectory.Actions
 			"cd\\",
 			"exit"
 		};
-}
+    }
 }
