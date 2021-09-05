@@ -20,6 +20,7 @@ namespace ManagerDirectory.Actions
 			"cd",
 			"cd..",
 			"cd\\",
+			"help",
 			"exit"
 		};
     }

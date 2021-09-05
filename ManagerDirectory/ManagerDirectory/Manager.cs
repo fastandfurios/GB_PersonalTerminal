@@ -29,7 +29,7 @@ namespace ManagerDirectory
 		{
 			await Task.Run( async () =>
             {
-                _currentPath = await _managerRepository.GetSavePath(_fileName, _currentPath, _defaultPath);
+                _currentPath = await _managerRepository.GetSavedPath(_fileName, _currentPath, _defaultPath);
 
                 foreach (var drive in DriveInfo.GetDrives())
                 {
@@ -109,9 +109,13 @@ namespace ManagerDirectory
 						break;
 					case "info":
 						await CallInformer(command);
-						_output.OutputInfoFilesAndDirectory(_informer);
+						await _output.OutputInfoFilesAndDirectory(_informer);
 						break;
-					case "rm":
+					case "help":
+                        var help = await _managerRepository.GetHelp();
+                        Console.WriteLine(help);
+						break;
+                    case "rm":
                         await CallDeletion(command);
 						break;
 				}

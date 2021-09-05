@@ -11,25 +11,31 @@ namespace ManagerDirectory.Repository
 {
     public class ManagerRepository
     {
-	    private string _currentPath;
-
-		public async Task<CurrentPath> GetSavePath(string fileName, CurrentPath currentPath, string defaultPath)
+        public async Task<CurrentPath> GetSavedPath(string fileName, CurrentPath currentPath, string defaultPath)
 		{
-			try
+            try
             {
                 await using var stream = new FileStream(fileName, FileMode.Open);
                 return await JsonSerializer.DeserializeAsync<CurrentPath>(stream);
-			}
-			catch { }
-
-			currentPath.Path = defaultPath;
-			return currentPath;
-		}
+            }
+            catch
+            {
+                currentPath.Path = defaultPath;
+                return currentPath;
+            }
+        }
 
         public async Task SaveCurrentPath(CurrentPath currentPath, string fileName)
         {
-            await JsonSerializer.SerializeAsync(Stream.Null, currentPath, typeof(CurrentPath));
-            await File.WriteAllTextAsync(fileName, _currentPath);
+            await using var fileStream = File.Open(fileName, FileMode.OpenOrCreate);
+            await JsonSerializer.SerializeAsync(fileStream, currentPath, typeof(CurrentPath));
+        }
+
+        internal async Task<Help> GetHelp()
+        {
+            var fileName = "HelpContent.json";
+            await using var stream = new FileStream(fileName, FileMode.Open);
+            return await JsonSerializer.DeserializeAsync<Help>(stream);
         }
 	}
 }

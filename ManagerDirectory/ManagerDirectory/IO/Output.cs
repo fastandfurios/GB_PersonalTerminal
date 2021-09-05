@@ -79,13 +79,10 @@ namespace ManagerDirectory.IO
         {
             await Task.Run(() =>
             {
-                var drives = DriveInfo.GetDrives();
-
-                foreach (var drive in drives)
-                    Console.WriteLine($"Имя диска: {drive.Name}");
-			});
+                DriveInfo.GetDrives().ToList().ForEach(drive => Console.WriteLine($"Имя диска: {drive.Name}"));
+            });
         }
 
-	    public void OutputInfoFilesAndDirectory(Informer informer) => Console.WriteLine(informer);
+	    public async Task OutputInfoFilesAndDirectory(Informer informer) => await Task.Run(() => Console.WriteLine(informer));
     }
 }
