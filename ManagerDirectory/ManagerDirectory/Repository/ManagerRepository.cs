@@ -13,12 +13,12 @@ namespace ManagerDirectory.Repository
     {
 	    private string _currentPath;
 
-		public CurrentPath GetSavePath(string fileName, CurrentPath currentPath, string defaultPath)
+		public async Task<CurrentPath> GetSavePath(string fileName, CurrentPath currentPath, string defaultPath)
 		{
 			try
-			{
-				_currentPath = File.ReadAllText(fileName);
-				return JsonSerializer.Deserialize<CurrentPath>(_currentPath);
+            {
+                await using var stream = new FileStream(fileName, FileMode.Open);
+                return await JsonSerializer.DeserializeAsync<CurrentPath>(stream);
 			}
 			catch { }
 

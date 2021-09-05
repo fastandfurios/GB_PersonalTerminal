@@ -16,7 +16,7 @@ namespace ManagerDirectory
 
 			var managerDirectory = new Manager();
             await managerDirectory.Run();
-            managerDirectory.Start();
+            await managerDirectory.Start();
 
             //await host.RunAsync();
         }

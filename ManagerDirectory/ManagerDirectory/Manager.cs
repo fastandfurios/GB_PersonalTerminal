@@ -19,52 +19,47 @@ namespace ManagerDirectory
 	    private string _fileName = "CurrentPath.json";
 	    private string _fileLogErrors = "LogErrors.txt";
 
-        private readonly InputData _input = new();
         private readonly Output _output = new();
-        private readonly Copying _copying = new();
-        private readonly Deletion _deletion = new();
         private readonly ManagerRepository _managerRepository = new();
         private CurrentPath _currentPath = new();
-        private readonly Commands _commands = new();
         private readonly Informer _informer = new();
         private readonly Checker _checker = new();
 
-		/// <summary>
-		/// Начинает программу c проверки наличия диска в системе
-		/// </summary>
-		public void Start()
+		public async Task Start()
 		{
-			_currentPath = _managerRepository.GetSavePath(_fileName, _currentPath, _defaultPath);
-            foreach (var drive in DriveInfo.GetDrives())
-			{
-				if (_currentPath.Path.Length > drive.Name.Length)
-				{
-					if (drive.Name == _currentPath.Path.Substring(0, 3))
-						return;
-				}
-				else
-				{
-					if (drive.Name == _currentPath.Path.Substring(0, _currentPath.Path.Length))
-						return;
-				}
-			}
+			await Task.Run( async () =>
+            {
+                _currentPath = await _managerRepository.GetSavePath(_fileName, _currentPath, _defaultPath);
 
-			_currentPath.Path = _defaultPath;
-		} 
+                foreach (var drive in DriveInfo.GetDrives())
+                {
+                    if (_currentPath.Path.Length > drive.Name.Length)
+                    {
+                        if (drive.Name == _currentPath.Path.Substring(0, 3))
+                            return;
+                    }
+                    else
+                    {
+                        if (drive.Name == _currentPath.Path.Substring(0, _currentPath.Path.Length))
+                            return;
+                    }
+                }
+
+                _currentPath.Path = _defaultPath;
+            });
+        } 
 
 	    public async Task Run()
 	    {
 			if (File.Exists(_fileName) && !string.IsNullOrEmpty(_currentPath.Path))
 				_defaultPath = _currentPath.Path;
 
-			_entry = await _input.Input(_defaultPath, _checker);
+            var input = new InputData();
+			_entry = await input.Input(_defaultPath, _checker);
 
 			await ToDistribute();
 	    }
 
-		/// <summary>
-		/// Управляет всей программой
-		/// </summary>
 	    private async Task ToDistribute()
 	    {
 		    try
@@ -93,7 +88,8 @@ namespace ManagerDirectory
                         await CallOutput(path, Directory.GetDirectories(path).Length + Directory.GetFiles(path).Length);
 						break;
 					case "cp":
-						path = Transform(_entry.Remove(0, command.Length + 1)).TrimEnd();
+						path = await Transform(_entry.Remove(0, command.Length + 1));
+                        path = path.TrimEnd();
 						newPath = _entry.Remove(0, command.Length + path.Length + 2) + "\\";
 						await CallCopying(path, newPath);
 						break;
@@ -140,43 +136,30 @@ namespace ManagerDirectory
 			}
 		}
 
-		/// <summary>
-		/// Вызывает вывод дисков в системе
-		/// </summary>
 		private async Task CallOutput()
 			=> await _output.GetDrives();
 
-		/// <summary>
-		/// Вызывает вывод деревьев
-		/// </summary>
-		/// <param name="path">Путь</param>
 		private async Task CallOutput(string path, int maxObjects)
 			=> await _output.OutputTree(path, maxObjects);
 
-		/// <summary>
-		/// Вызывает копирование
-		/// </summary>
-		/// <param name="name">Имя удаляемого файла или папки</param>
-		/// <param name="newPath">Путь, по которому производится копирование</param>
-		private async Task CallCopying(string name, string newPath)
-			=> await _copying.Copy(_defaultPath, name, newPath);
-
-		/// <summary>
-		/// Вызывает удаление
-		/// </summary>
+        private async Task CallCopying(string name, string newPath)
+        {
+            var copying = new Copying();
+			await copying.Copy(_defaultPath, name, newPath);
+		}
+		
 		private async Task CallDeletion(string command)
 		{
 			var entry = await _checker.CheckPath(_entry.Remove(0, command.Length + 1), _defaultPath);
 
+            var deletion = new Deletion();
+
 			if (Path.GetExtension(entry) != string.Empty)
-				_deletion.FullPathFile = entry;
+				deletion.FullPathFile = entry;
 			else
-				_deletion.FullPathDirectory = entry;
+				deletion.FullPathDirectory = entry;
 		}
 
-		/// <summary>
-		/// Вызывает информатор объектов
-		/// </summary>
 		private async Task CallInformer(string command)
 		{
 			var entry = string.Empty;
@@ -199,32 +182,33 @@ namespace ManagerDirectory
 			}
 		}
 
-		/// <summary>
-		/// Преобразует введенную строку пользователя в имя файла или папки при операции копирования
-		/// </summary>
-		/// <param name="str">Строка</param>
-		/// <returns>Имя файла или папки</returns>
-		private string Transform(string str)
+		private async Task<string> Transform(string str)
 		{
-			for (int i = str.Length - 1; i > 0; i--)
-			{
-				if (str[i] != ':')
-					str = str.Remove(i, 1);
-				else
-				{
-					for (int j = str.Length - 1; j > 0; j--)
-					{
-						if (str[j] != ' ')
-							str = str.Remove(j, 1);
-						else
-							break;
+			return await Task.Run(async () =>
+            {
+                for (int i = str.Length - 1; i > 0; i--)
+                {
+                    if (str[i] != ':')
+                        str = str.Remove(i, 1);
+                    else
+                    {
+                        await Task.Run(() =>
+                        {
+                            for (int j = str.Length - 1; j > 0; j--)
+                            {
+                                if (str[j] != ' ')
+                                    str = str.Remove(j, 1);
+                                else
+                                    break;
+                            }
+                        });
+
+                        break;
 					}
+                }
 
-					break;
-				}
-			}
-
-			return str;
-		}
+                return str;
+			});
+        }
     }
 }

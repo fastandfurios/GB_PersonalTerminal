@@ -37,7 +37,7 @@ namespace ManagerDirectory.Actions
 
 			    return $"Количество папок: {countDirectory}\n" +
 			           $"Количество файлов: {countFiles}\n" +
-			           $"Размер: {Converter(size)}";
+			           $"Размер: {Converter(size).GetAwaiter().GetResult()}";
 		    }
 		    else
 		    {
@@ -45,27 +45,28 @@ namespace ManagerDirectory.Actions
 
 				return $"Имя: {Path.GetFileNameWithoutExtension(_fullPathFile)}\n" +
 			           $"Расширение: {fileInfo.Extension}\n" +
-			           $"Размер: {Converter(fileInfo.Length)}";
+			           $"Размер: {Converter(fileInfo.Length).GetAwaiter().GetResult()}";
 		    }
 	    }
 
-		/// <summary>
-		/// Конвертирует размер файлов и папок в читаемый вид
-		/// </summary>
-		/// <param name="size">Размерность</param>
-		/// <returns>Готовая строка</returns>
-		private string Converter(long size)
-		{
-			if (size < 1024)
-				return $"{size.ToString()} B";
-			else if (1024 < size && size < 1_048_576)
-				return $"{((double)size / 1024).ToString("F")} KB";
-			else if (1_048_576 < size && size < 1_073_741_824)
-				return $"{((double)size / 1_048_576).ToString("F")} MB";
-			else if (size > 1_073_741_824)
-				return $"{((double)size / 1_073_741_824).ToString("F")} GB";
+		private async Task<string> Converter(long size)
+        {
+            return await Task.Run(async () =>
+            {
+                if (size < 1024)
+                    return $"{size.ToString()} B";
 
-			return default;
-		}
+                if (1024 < size && size < 1_048_576)
+                    return await Task.Run(() => $"{((double)size / 1024).ToString("F")} KB");
+
+                if (1_048_576 < size && size < 1_073_741_824)
+                    return await Task.Run(() => $"{((double)size / 1_048_576).ToString("F")} MB");
+
+                if (size > 1_073_741_824)
+                    return await Task.Run(() => $"{((double)size / 1_073_741_824).ToString("F")} GB");
+
+                return default;
+			});
+        }
     }
 }

@@ -8,7 +8,7 @@ namespace ManagerDirectory
 {
     public interface IManager
     {
-        void Start();
+        Task Start();
         Task Run();
     }
 }

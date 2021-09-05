@@ -10,22 +10,21 @@ namespace ManagerDirectory.IO
 {
     public class InputData
     {
-	    private string _entry;
-
-	    public async Task<string> Input(string defaultPath, Checker checker)
+        public async Task<string> Input(string defaultPath, Checker checker)
         {
             return await Task.Run(async () =>
             {
                 var flag = false;
+                var entry = string.Empty;
 
                 do
                 {
                     Console.Write($"{defaultPath} > ");
-                    _entry = Console.ReadLine();
-                    flag = await checker.CheckInputCommand(_entry);
+                    entry = Console.ReadLine();
+                    flag = await checker.CheckInputCommand(entry);
                 } while (!flag);
 
-                return _entry;
+                return entry;
 			});
         }
     }

@@ -12,11 +12,6 @@ namespace ManagerDirectory.Validation
     {
         private readonly Commands _commands = new();
 
-		/// <summary>
-		/// Проверяет введенную команду
-		/// </summary>
-		/// <param name="nameCommand">Имя команды</param>
-		/// <returns>Либо истина, либо ложь</returns>
 		public async Task<bool> CheckInputCommand(string nameCommand)
         {
             return await Task.Run(() =>
@@ -31,12 +26,6 @@ namespace ManagerDirectory.Validation
 			});
         }
 
-		/// <summary>
-		/// Проверяет существование файла или каталога
-		/// </summary>
-		/// <param name="path">Путь, заданный пользователем</param>
-		/// <param name="defaultPath">Путь по умолчанию</param>
-		/// <returns>Либо пользовательский существующий путь, либо стандартный путь</returns>
 		public async Task<string> CheckPath(string path, string defaultPath)
         {
             return await Task.Run(() =>

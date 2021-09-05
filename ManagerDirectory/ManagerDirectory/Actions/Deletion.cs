@@ -40,9 +40,6 @@ namespace ManagerDirectory.Actions
 			}
 	    }
 
-		/// <summary>
-		/// Удаляет все директории и файлы в указанной директории
-		/// </summary>
         private void Delete()
 		{
 			_countFiles = Directory.GetFiles(_fullPathDirectory, "*.*", SearchOption.AllDirectories).Length;
