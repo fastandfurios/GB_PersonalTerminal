@@ -9,9 +9,9 @@ using ManagerDirectory.Models;
 
 namespace ManagerDirectory.Repository
 {
-    public class ManagerRepository
+    internal sealed class ManagerRepository
     {
-        public async Task<CurrentPath> GetSavedPath(string fileName, CurrentPath currentPath, string defaultPath)
+        internal async Task<CurrentPath> GetSavedPath(string fileName, CurrentPath currentPath, string defaultPath)
 		{
             try
             {
@@ -25,7 +25,7 @@ namespace ManagerDirectory.Repository
             }
         }
 
-        public async Task SaveCurrentPath(CurrentPath currentPath, string fileName)
+        internal async Task SaveCurrentPath(CurrentPath currentPath, string fileName)
         {
             await using var fileStream = File.Open(fileName, FileMode.OpenOrCreate);
             await JsonSerializer.SerializeAsync(fileStream, currentPath, typeof(CurrentPath));

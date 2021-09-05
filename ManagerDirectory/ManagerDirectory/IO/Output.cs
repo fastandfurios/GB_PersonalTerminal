@@ -8,11 +8,11 @@ using ManagerDirectory.Actions;
 
 namespace ManagerDirectory.IO
 {
-    public class Output
+    internal sealed class Output
     {
 	    private int _countFiles, _countDirectory;
 
-	    public async Task OutputTree(string path, int maxObjects)
+	    internal async Task OutputTree(string path, int maxObjects)
 	    {
 		    var directoryInfo = new DirectoryInfo(path);
 		    int length = await Task.Run(() => directoryInfo.Name.Length / 2);
@@ -75,14 +75,9 @@ namespace ManagerDirectory.IO
 		    arraySelector.RemoveRange(0, arraySelector.Count);
 		}
 		
-	    public async Task GetDrives()
-        {
-            await Task.Run(() =>
-            {
-                DriveInfo.GetDrives().ToList().ForEach(drive => Console.WriteLine($"Имя диска: {drive.Name}"));
-            });
-        }
+	    internal async Task GetDrives()
+            => await Task.Run(() => DriveInfo.GetDrives().ToList().ForEach(drive => Console.WriteLine($"Имя диска: {drive.Name}")));
 
-	    public async Task OutputInfoFilesAndDirectory(Informer informer) => await Task.Run(() => Console.WriteLine(informer));
+        internal async Task OutputInfoFilesAndDirectory(Informer informer) => await Task.Run(() => Console.WriteLine(informer));
     }
 }

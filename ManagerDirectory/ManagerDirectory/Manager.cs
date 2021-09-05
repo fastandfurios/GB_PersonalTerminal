@@ -12,7 +12,7 @@ using ManagerDirectory.Validation;
 
 namespace ManagerDirectory
 {
-    public class Manager : IManager
+    internal sealed class Manager : IManager
     {
 	    private string _entry;
 	    private string _defaultPath = "C:\\";

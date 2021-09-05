@@ -8,11 +8,11 @@ using ManagerDirectory.Actions;
 
 namespace ManagerDirectory.Validation
 {
-    public class Checker
+    public sealed class Checker
     {
         private readonly Commands _commands = new();
 
-		public async Task<bool> CheckInputCommand(string nameCommand)
+		internal async Task<bool> CheckInputCommand(string nameCommand)
         {
             return await Task.Run(() =>
             {
@@ -26,7 +26,7 @@ namespace ManagerDirectory.Validation
 			});
         }
 
-		public async Task<string> CheckPath(string path, string defaultPath)
+		internal async Task<string> CheckPath(string path, string defaultPath)
         {
             return await Task.Run(() =>
             {
