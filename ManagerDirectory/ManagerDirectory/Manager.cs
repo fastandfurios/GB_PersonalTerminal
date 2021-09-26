@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using ManagerDirectory.Actions;
 using ManagerDirectory.IO;
 using ManagerDirectory.Models;
-using ManagerDirectory.Repository;
+using ManagerDirectory.Repositories;
 using ManagerDirectory.Validation;
 
 namespace ManagerDirectory
@@ -22,8 +22,17 @@ namespace ManagerDirectory
         private readonly Output _output = new();
         private readonly ManagerRepository _managerRepository = new();
         private CurrentPath _currentPath = new();
-        private readonly Informer _informer = new();
+        private readonly Informer _informer;
         private readonly Checker _checker = new();
+
+        public Manager()
+        {
+        }
+
+        public Manager(Informer informer) : this()
+        {
+            _informer = informer;
+        }
 
 		public async Task Start()
 		{

@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using ManagerDirectory.Models;
 
-namespace ManagerDirectory.Repository
+namespace ManagerDirectory.Repositories
 {
     internal sealed class ManagerRepository
     {
