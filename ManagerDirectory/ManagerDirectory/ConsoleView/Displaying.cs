@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ManagerDirectory.Actions;
+using ManagerDirectory.Services;
 
 namespace ManagerDirectory.ConsoleView
 {
@@ -11,7 +11,7 @@ namespace ManagerDirectory.ConsoleView
     {
 	    private int _countFiles, _countDirectory;
 
-	    internal async Task OutputTree(string path, int maxObjects)
+	    internal async Task OutputTreeAsync(string path, int maxObjects)
 	    {
 		    var directoryInfo = new DirectoryInfo(path);
 		    var length = await Task.Run(() => directoryInfo.Name.Length / 2);
@@ -74,9 +74,9 @@ namespace ManagerDirectory.ConsoleView
 		    arraySelector.RemoveRange(0, arraySelector.Count);
 		}
 		
-	    internal async Task GetDrives()
+	    internal async Task GetDisksAsync()
             => await Task.Run(() => DriveInfo.GetDrives().ToList().ForEach(drive => Console.WriteLine($"Имя диска: {drive.Name}")));
 
-        internal async Task OutputInfoFilesAndDirectory(Informer informer) => await Task.Run(() => Console.WriteLine(informer));
+        internal async Task OutputInfoFilesAndDirectoryAsync(InformingService informer) => await Task.Run(() => Console.WriteLine(informer));
     }
 }

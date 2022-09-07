@@ -17,7 +17,7 @@ namespace ManagerDirectory.ConsoleView
                 {
                     Console.Write($"{defaultPath}> ");
                     entry = Console.ReadLine();
-                    valid = await validation.CheckForInput(entry);
+                    valid = await validation.CheckForInputAsync(entry);
                 } while (!valid);
 
                 return entry;

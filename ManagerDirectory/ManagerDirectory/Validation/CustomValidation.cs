@@ -8,7 +8,7 @@ namespace ManagerDirectory.Validation
     {
         private readonly Commands _commands = new();
 
-		internal async Task<bool> CheckForInput(string nameCommand)
+		internal async Task<bool> CheckForInputAsync(string nameCommand)
         {
             return await Task.Run(() =>
             {
@@ -22,7 +22,7 @@ namespace ManagerDirectory.Validation
 			});
         }
 
-		internal async Task<string> CheckEnteredPath(string path, string defaultPath)
+		internal async Task<string> CheckEnteredPathAsync(string path, string defaultPath)
         {
             return await Task.Run(() =>
             {

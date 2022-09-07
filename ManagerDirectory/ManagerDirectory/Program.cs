@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using ManagerDirectory.Services;
 
 namespace ManagerDirectory
 {
@@ -9,9 +10,9 @@ namespace ManagerDirectory
         {
             Console.Title = "ManagerDirectory";
 
-			var managerDirectory = new Manager();
-            await managerDirectory.StartAsync();
-            await managerDirectory.RunAsync();
+			var service = new ManagerService();
+            await service.StartAsync();
+            await service.RunAsync();
         }
     }
 }
