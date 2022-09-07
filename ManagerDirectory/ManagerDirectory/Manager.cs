@@ -2,25 +2,25 @@
 using System.IO;
 using System.Threading.Tasks;
 using ManagerDirectory.Actions;
-using ManagerDirectory.IO;
-using ManagerDirectory.Models;
-using ManagerDirectory.Repositories;
+using ManagerDirectory.ConsoleView;
+using ManagerDirectory.Infrastructure.Models;
+using ManagerDirectory.Infrastructure.Repositories;
 using ManagerDirectory.Validation;
 
 namespace ManagerDirectory
 {
-    internal sealed class Manager : IManager
+    internal sealed class Manager
     {
 	    private string _entry;
 	    private string _defaultPath = "C:\\";
 	    private string _fileName = "CurrentPath.json";
 	    private string _fileLogErrors = "LogErrors.txt";
 
-        private readonly Output _output = new();
-        private readonly ManagerRepository _managerRepository = new();
+        private readonly Displaying _output = new();
+        private readonly Repository _managerRepository = new();
         private CurrentPath _currentPath = new();
         private readonly Informer _informer;
-        private readonly Checker _checker = new();
+        private readonly CustomValidation _checker = new();
 
         public Manager()
         {
@@ -31,11 +31,11 @@ namespace ManagerDirectory
             _informer = informer;
         }
 
-		public async Task Start()
+		public async Task StartAsync()
 		{
 			await Task.Run( async () =>
             {
-                _currentPath = await _managerRepository.GetSavedPath(_fileName, _currentPath, _defaultPath);
+                _currentPath = await _managerRepository.GetPath(_fileName, _currentPath, _defaultPath);
 
                 foreach (var drive in DriveInfo.GetDrives())
                 {
@@ -53,15 +53,15 @@ namespace ManagerDirectory
 
                 _currentPath.Path = _defaultPath;
             });
-        } 
+        }
 
-	    public async Task Run()
+        public async Task RunAsync()
 	    {
 			if (File.Exists(_fileName) && !string.IsNullOrEmpty(_currentPath.Path))
 				_defaultPath = _currentPath.Path;
 
-            var input = new InputData();
-			_entry = await input.Input(_defaultPath, _checker);
+            var input = new Receiver();
+			_entry = await input.Receive(_defaultPath, _checker);
 
 			await ToDistribute();
 	    }
@@ -85,12 +85,12 @@ namespace ManagerDirectory
 						break;
 					case "ls":
 						path = _entry.Length == command.Length ? _defaultPath : _entry.Remove(0, command.Length + 1);
-						path = await _checker.CheckPath(path, _defaultPath);
+						path = await _checker.CheckEnteredPath(path, _defaultPath);
 						await CallOutput(path, 10);
 						break;
 					case "lsAll":
 						path = _entry.Length == command.Length ? _defaultPath : _entry.Remove(0, command.Length + 1);
-						path = await _checker.CheckPath(path, _defaultPath);
+						path = await _checker.CheckEnteredPath(path, _defaultPath);
                         await CallOutput(path, Directory.GetDirectories(path).Length + Directory.GetFiles(path).Length);
 						break;
 					case "cp":
@@ -104,7 +104,7 @@ namespace ManagerDirectory
 						break;
 					case "cd":
 						path = _entry.Remove(0, command.Length + 1) + "\\";
-						_defaultPath = await _checker.CheckPath(path, _defaultPath);
+						_defaultPath = await _checker.CheckEnteredPath(path, _defaultPath);
 						break;
 					case "cd..":
 						path = _defaultPath.Remove(_defaultPath.Length - 1, 1);
@@ -129,12 +129,12 @@ namespace ManagerDirectory
 				if (command != "exit")
 				{
 					_currentPath.Path = string.Empty;
-					await Run();
+					await RunAsync();
 				}
 				else
 				{
 					_currentPath.Path = _defaultPath;
-					await _managerRepository.SaveCurrentPath(_currentPath, _fileName);
+					await _managerRepository.CreatePath(_currentPath, _fileName);
 				}
 			}
 			catch (Exception e)
@@ -142,7 +142,7 @@ namespace ManagerDirectory
 				Console.WriteLine(e.Message);
 				File.AppendAllText(_fileLogErrors, $"{DateTime.Now.ToString("G")} {e.Message} {e.TargetSite}" );
 				File.AppendAllText(_fileLogErrors, Environment.NewLine);
-				await Run();
+				await RunAsync();
 			}
 		}
 
@@ -160,7 +160,7 @@ namespace ManagerDirectory
 		
 		private async Task CallDeletion(string command)
 		{
-			var entry = await _checker.CheckPath(_entry.Remove(0, command.Length + 1), _defaultPath);
+			var entry = await _checker.CheckEnteredPath(_entry.Remove(0, command.Length + 1), _defaultPath);
 
             var deletion = new Deletion();
 
@@ -177,7 +177,7 @@ namespace ManagerDirectory
 			if (_entry.Length == command.Length)
 				entry = _defaultPath;
 			else
-				entry = await _checker.CheckPath(_entry.Remove(0, command.Length + 1), _defaultPath);
+				entry = await _checker.CheckEnteredPath(_entry.Remove(0, command.Length + 1), _defaultPath);
 
 
 			if (Path.GetExtension(entry) != string.Empty)

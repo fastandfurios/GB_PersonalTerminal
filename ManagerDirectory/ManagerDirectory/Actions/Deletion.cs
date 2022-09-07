@@ -8,23 +8,23 @@ namespace ManagerDirectory.Actions
     {
 	    private int _countFiles;
 	    private int _countDirectory;
+        private string _fullPathDirectory;
+        private string _fullPathFile;
 
-	    private string _fullPathDirectory;
-	    public string FullPathDirectory
+        public string FullPathDirectory
 	    {
 		    get => _fullPathDirectory; 
 		    set
 		    {
 			    _fullPathDirectory = value;
 
-                Delete().GetAwaiter();
+                DeleteAsync().GetAwaiter();
 
 				Directory.Delete(_fullPathDirectory);
 				Console.WriteLine("Удаление прошло успешно!");
 		    } 
 	    }
 
-	    private string _fullPathFile;
 	    public string FullPathFile
 	    {
 		    get => _fullPathFile;
@@ -37,7 +37,7 @@ namespace ManagerDirectory.Actions
 			}
 	    }
 
-        private async Task Delete()
+        private async Task DeleteAsync()
 		{
 			_countFiles = Directory.GetFiles(_fullPathDirectory, "*.*", SearchOption.AllDirectories).Length;
 			_countDirectory = Directory.GetDirectories(_fullPathDirectory, "*", SearchOption.AllDirectories).Length;
@@ -45,13 +45,13 @@ namespace ManagerDirectory.Actions
 			if (_countFiles != 0)
 			{
 				File.Delete(Directory.GetFiles(_fullPathDirectory, "*.*", SearchOption.AllDirectories)[_countFiles - 1]);
-				await Delete();
+				await DeleteAsync();
 			}
 
 			if (_countDirectory != 0)
 			{
 				Directory.Delete(Directory.GetDirectories(_fullPathDirectory, "*", SearchOption.AllDirectories)[_countDirectory - 1]);
-				await Delete();
+				await DeleteAsync();
 			}
 			
 		}

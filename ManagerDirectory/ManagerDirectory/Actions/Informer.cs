@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ManagerDirectory.Enums;
 
 namespace ManagerDirectory.Actions
 {
@@ -25,15 +26,15 @@ namespace ManagerDirectory.Actions
 		    if (!string.IsNullOrEmpty(_fullPathDirectory) && Path.GetExtension(_fullPathDirectory) == string.Empty)
 		    {
 			    var directoryInfo = new DirectoryInfo(_fullPathDirectory);
-				int countDirectory = directoryInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
-			    int countFiles = directoryInfo.GetFiles("*.*", SearchOption.AllDirectories).Length;
+				var countDirectory = directoryInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
+			    var countFiles = directoryInfo.GetFiles("*.*", SearchOption.AllDirectories).Length;
 			    long size = 0;
 
 				directoryInfo.GetFiles("*.*", SearchOption.AllDirectories).ToList().ForEach(file => size += file.Length);
 
 			    return $"Количество папок: {countDirectory}\n" +
 			           $"Количество файлов: {countFiles}\n" +
-			           $"Размер: {Converter(size).GetAwaiter().GetResult()}";
+			           $"Размер: {ConvertAsync(size).GetAwaiter().GetResult()}";
 		    }
 		    else
 		    {
@@ -41,28 +42,25 @@ namespace ManagerDirectory.Actions
 
 				return $"Имя: {Path.GetFileNameWithoutExtension(_fullPathFile)}\n" +
 			           $"Расширение: {fileInfo.Extension}\n" +
-			           $"Размер: {Converter(fileInfo.Length).GetAwaiter().GetResult()}";
+			           $"Размер: {ConvertAsync(fileInfo.Length).GetAwaiter().GetResult()}";
 		    }
 	    }
 
-		private async Task<string> Converter(long size)
+		private async Task<string> ConvertAsync(long size)
         {
             return await Task.Run(async () =>
             {
-                if (size < 1024)
-                    return $"{size.ToString()} B";
-
-                if (1024 < size && size < 1_048_576)
-                    return await Task.Run(() => $"{((double)size / 1024).ToString("F")} KB");
-
-                if (1_048_576 < size && size < 1_073_741_824)
-                    return await Task.Run(() => $"{((double)size / 1_048_576).ToString("F")} MB");
-
-                if (size > 1_073_741_824)
-                    return await Task.Run(() => $"{((double)size / 1_073_741_824).ToString("F")} GB");
-
-                return default;
-			});
+                return size switch
+                {
+                    < 1024 => $"{size.ToString()} {Value.B.ToString()}",
+                    > 1024 and < 1_048_576 => await Task.Run(() => $"{(double)size / 1024:F} {Value.KB.ToString()}"),
+                    > 1_048_576 and < 1_073_741_824 => await Task.Run(() =>
+                        $"{(double)size / 1_048_576:F} {Value.MB.ToString()}"),
+                    > 1_073_741_824 => await Task.Run(() =>
+                        $"{(double)size / 1_073_741_824:F} {Value.GB.ToString()}"),
+                    _ => "0"
+                };
+            });
         }
     }
 }
