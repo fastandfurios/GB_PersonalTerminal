@@ -1,33 +1,40 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ManagerDirectory.Actions
 {
-    public class Copying
+    internal sealed class Copying
     {
-	    public void Copy(string oldPath, string name, string newPath)
+	    internal async Task Copy(string oldPath, string name, string newPath)
 	    {
 		    if (Path.GetExtension(name) != string.Empty)
-		    {
-			    foreach (var file in Directory.GetFiles(oldPath, name, SearchOption.TopDirectoryOnly))
-				    File.Copy(file, file.Replace(oldPath, newPath), true);
-
-			    Console.WriteLine($"Копирование прошло успешно!");
-		    }
+            {
+                await Task.Run(() =>
+                {
+                    Directory.GetFiles(oldPath, name, SearchOption.TopDirectoryOnly).ToList().ForEach(file =>
+                        File.Copy(file, file.Replace(oldPath, newPath), true));
+                    
+                    Console.WriteLine($"Копирование прошло успешно!");
+				});
+            }
 		    else
-		    {
-			    foreach (var directory in Directory.GetDirectories(oldPath, name, SearchOption.TopDirectoryOnly))
-				    Directory.CreateDirectory(directory.Replace(oldPath, newPath));
+            {
+                await Task.WhenAll(Task.Run(() =>
+                    {
+                        Directory.GetDirectories(oldPath, name, SearchOption.TopDirectoryOnly).ToList().ForEach(directory =>
+                            Directory.CreateDirectory(directory.Replace(oldPath, newPath)));
+                            
+                    }),
+                    Task.Run(() =>
+                    {
+                        Directory.GetFiles(oldPath + name, "*.*", SearchOption.TopDirectoryOnly).ToList().ForEach(file => 
+                            File.Copy(file, file.Replace(oldPath, newPath), true));
 
-			    foreach (var file in Directory.GetFiles(oldPath + name, "*.*", SearchOption.TopDirectoryOnly))
-				    File.Copy(file, file.Replace(oldPath, newPath), true);
-
-			    Console.WriteLine($"Копирование прошло успешно!");
-		    }
+                        Console.WriteLine($"Копирование прошло успешно!");
+                    }));
+            }
 	    }
     }
 }
