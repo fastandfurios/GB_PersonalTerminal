@@ -6,18 +6,18 @@ namespace ManagerDirectory.ConsoleView
 {
     internal sealed class Receiver
     {
-        internal async Task<(string command, Uri path)> Receive(string defaultPath, CustomValidation validation)
+        internal async Task<(string command, Uri path)> Receive(Uri defaultPath, CustomValidation validation)
         {
             return await Task.Run(async () =>
             {
                 var valid = true;
                 var entries = new string[2];
                 var command = string.Empty;
-                var path = new Uri(defaultPath);
+                var path = new Uri(defaultPath.OriginalString);
 
                 do
                 {
-                    Console.Write($@"{defaultPath}> ");
+                    Console.Write($@"{defaultPath.OriginalString}> ");
                     entries = Console.ReadLine()!
                         .Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
 

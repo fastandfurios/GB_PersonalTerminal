@@ -11,17 +11,18 @@ namespace ManagerDirectory.ConsoleView
     {
 	    private int _countFiles, _countDirectory;
 
-	    internal async Task OutputTreeAsync(string path, int maxObjects)
+	    internal async Task OutputTreeAsync(Uri path, int maxObjects)
 	    {
-		    var directoryInfo = new DirectoryInfo(path);
+		    var directoryInfo = new DirectoryInfo(path.OriginalString);
 		    var length = await Task.Run(() => directoryInfo.Name.Length / 2);
 		    int spaceLength;
-		    var arraySelector = await Task.Run(() => path.Where(s => s == '\\').ToList());
+		    var arraySelector = await Task.Run(() => path.OriginalString.Where(s => s == '\\')
+                .ToList());
 
 			if (arraySelector.Count > 2)
 				OutputTree(" ~\\" + directoryInfo.Name, arraySelector, directoryInfo.Name.Length / 2 + 2, out spaceLength);
 		    else
-				OutputTree(" " + path, arraySelector, path.Length - length, out spaceLength);
+				OutputTree(" " + path, arraySelector, path.OriginalString.Length - length, out spaceLength);
 			
 			await Task.Run(() =>
             {
@@ -29,12 +30,12 @@ namespace ManagerDirectory.ConsoleView
                 {
                     if (_countDirectory < maxObjects)
                     {
-                        Console.WriteLine($"{new string(' ', spaceLength)}|{new string('-', length + 1)}{directory.Name}");
+                        Console.WriteLine($@"{new string(' ', spaceLength)}|{new string('-', length + 1)}{directory.Name}");
                         _countDirectory++;
                     }
                     else
                     {
-                        Console.WriteLine($"{new string(' ', spaceLength)}|{new string('-', length + 1)}...");
+                        Console.WriteLine($@"{new string(' ', spaceLength)}|{new string('-', length + 1)}...");
                         break;
                     }
                 }
@@ -48,15 +49,15 @@ namespace ManagerDirectory.ConsoleView
                 {
                     if (_countFiles < maxObjects)
                     {
-                        Console.Write($"{new string(' ', spaceLength)}|{new string('-', length + 1)}");
+                        Console.Write($@"{new string(' ', spaceLength)}|{new string('-', length + 1)}");
                         Console.ForegroundColor = ConsoleColor.DarkGreen;
-                        Console.Write($"{file.Name}\n");
+                        Console.Write($@"{file.Name}");
                         Console.ResetColor();
                         _countFiles++;
                     }
                     else
                     {
-                        Console.Write($"{new string(' ', spaceLength)}|{new string('-', length + 1)}...\n");
+                        Console.Write($@"{new string(' ', spaceLength)}|{new string('-', length + 1)}...");
                         break;
                     }
                 }
@@ -75,7 +76,9 @@ namespace ManagerDirectory.ConsoleView
 		}
 		
 	    internal async Task GetDisksAsync()
-            => await Task.Run(() => DriveInfo.GetDrives().ToList().ForEach(drive => Console.WriteLine($"Имя диска: {drive.Name}")));
+            => await Task.Run(() => DriveInfo.GetDrives()
+                .ToList()
+                .ForEach(drive => Console.WriteLine($@"Имя диска: {drive.Name}")));
 
         internal async Task OutputInfoFilesAndDirectoryAsync(InformingService informer) => await Task.Run(() => Console.WriteLine(informer));
     }

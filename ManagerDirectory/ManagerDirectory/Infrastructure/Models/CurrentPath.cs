@@ -1,4 +1,6 @@
-﻿namespace ManagerDirectory.Infrastructure.Models
+﻿using System;
+
+namespace ManagerDirectory.Infrastructure.Models
 {
     public class CurrentPath
     { 

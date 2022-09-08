@@ -86,5 +86,14 @@ namespace ManagerDirectory.Properties {
                 return ResourceManager.GetString("FileLogErrors", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to HelpContent.json.
+        /// </summary>
+        internal static string HelpContent {
+            get {
+                return ResourceManager.GetString("HelpContent", resourceCulture);
+            }
+        }
     }
 }

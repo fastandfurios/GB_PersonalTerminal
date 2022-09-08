@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace ManagerDirectory.Validation
@@ -21,14 +22,14 @@ namespace ManagerDirectory.Validation
 			});
         }
 
-		internal async Task<string> CheckEnteredPathAsync(string path, string defaultPath)
+		internal async Task<Uri> CheckEnteredPathAsync(Uri path, Uri defaultPath)
         {
             return await Task.Run(() =>
             {
-                if (Directory.Exists(defaultPath + path))
-                    return defaultPath + path;
+                if (Directory.Exists(Path.Combine(defaultPath.OriginalString, path.OriginalString)))
+                    return new Uri(Path.Combine(defaultPath.OriginalString, path.OriginalString));
 
-                if ((Directory.Exists(path) || File.Exists(path)) && path.Contains('\\'))
+                if ((Directory.Exists(path.OriginalString) || File.Exists(path.OriginalString)) && path.OriginalString.Contains('\\'))
                     return path;
 
                 return defaultPath;

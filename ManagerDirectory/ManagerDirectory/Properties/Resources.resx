@@ -126,4 +126,7 @@
   <data name="FileLogErrors" xml:space="preserve">
     <value>LogErrors.txt</value>
   </data>
+  <data name="HelpContent" xml:space="preserve">
+    <value>HelpContent.json</value>
+  </data>
 </root>

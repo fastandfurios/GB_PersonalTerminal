@@ -1,13 +1,15 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ManagerDirectory.Infrastructure.Models;
+using ManagerDirectory.Properties;
 
 namespace ManagerDirectory.Infrastructure.Repositories
 {
     internal sealed class Repository
     {
-        internal async Task<CurrentPath> GetPath(string fileName, CurrentPath currentPath, string defaultPath)
+        internal async Task<CurrentPath> GetPath(string fileName, CurrentPath currentPath, Uri defaultPath)
 		{
             try
             {
@@ -16,7 +18,7 @@ namespace ManagerDirectory.Infrastructure.Repositories
             }
             catch
             {
-                currentPath.Path = defaultPath;
+                currentPath.Path = defaultPath.OriginalString;
                 return currentPath;
             }
         }
@@ -29,8 +31,7 @@ namespace ManagerDirectory.Infrastructure.Repositories
 
         internal async Task<Help> GetHelp()
         {
-            var fileName = "HelpContent.json";
-            await using var stream = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            await using var stream = new FileStream(Resources.HelpContent, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
             return await JsonSerializer.DeserializeAsync<Help>(stream);
         }
 	}

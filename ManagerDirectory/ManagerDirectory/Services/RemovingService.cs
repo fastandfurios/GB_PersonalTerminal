@@ -8,10 +8,10 @@ namespace ManagerDirectory.Services
     {
         private int _countFiles;
         private int _countDirectory;
-        private string _fullPathDirectory;
-        private string _fullPathFile;
+        private Uri _fullPathDirectory;
+        private Uri _fullPathFile;
 
-        public string FullPathDirectory
+        public Uri FullPathDirectory
         {
             get => _fullPathDirectory;
             set
@@ -20,37 +20,37 @@ namespace ManagerDirectory.Services
 
                 DeleteAsync().GetAwaiter();
 
-                Directory.Delete(_fullPathDirectory);
+                Directory.Delete(_fullPathDirectory.OriginalString);
                 Console.WriteLine("Удаление прошло успешно!");
             }
         }
 
-        public string FullPathFile
+        public Uri FullPathFile
         {
             get => _fullPathFile;
             set
             {
                 _fullPathFile = value;
 
-                File.Delete(_fullPathFile);
+                File.Delete(_fullPathFile.OriginalString);
                 Console.WriteLine("Удаление прошло успешно!");
             }
         }
 
         private async Task DeleteAsync()
         {
-            _countFiles = Directory.GetFiles(_fullPathDirectory, "*.*", SearchOption.AllDirectories).Length;
-            _countDirectory = Directory.GetDirectories(_fullPathDirectory, "*", SearchOption.AllDirectories).Length;
+            _countFiles = Directory.GetFiles(_fullPathDirectory.OriginalString, "*.*", SearchOption.AllDirectories).Length;
+            _countDirectory = Directory.GetDirectories(_fullPathDirectory.OriginalString, "*", SearchOption.AllDirectories).Length;
 
             if (_countFiles != 0)
             {
-                File.Delete(Directory.GetFiles(_fullPathDirectory, "*.*", SearchOption.AllDirectories)[_countFiles - 1]);
+                File.Delete(Directory.GetFiles(_fullPathDirectory.OriginalString, "*.*", SearchOption.AllDirectories)[_countFiles - 1]);
                 await DeleteAsync();
             }
 
             if (_countDirectory != 0)
             {
-                Directory.Delete(Directory.GetDirectories(_fullPathDirectory, "*", SearchOption.AllDirectories)[_countDirectory - 1]);
+                Directory.Delete(Directory.GetDirectories(_fullPathDirectory.OriginalString, "*", SearchOption.AllDirectories)[_countDirectory - 1]);
                 await DeleteAsync();
             }
 
