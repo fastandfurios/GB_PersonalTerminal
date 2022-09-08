@@ -4,16 +4,17 @@ using System.Threading.Tasks;
 using ManagerDirectory.ConsoleView;
 using ManagerDirectory.Infrastructure.Models;
 using ManagerDirectory.Infrastructure.Repositories;
+using ManagerDirectory.Properties;
 using ManagerDirectory.Validation;
 
 namespace ManagerDirectory.Services
 {
     internal sealed class ManagerService
     {
-        private string _entry;
-        private string _defaultPath = "C:\\";
-        private string _fileName = "CurrentPath.json";
-        private string _fileLogErrors = "LogErrors.txt";
+        private (string command, Uri path) _entry;
+        private string _defaultPath = Resources.DefaultPath;
+        private readonly string _fileName = Resources.CurrentPath;
+        private readonly string _fileLogErrors = Resources.FileLogErrors;
 
         private readonly Displaying _displaying = new();
         private readonly Repository _repository = new();
@@ -59,8 +60,8 @@ namespace ManagerDirectory.Services
             if (File.Exists(_fileName) && !string.IsNullOrEmpty(_currentPath.Path))
                 _defaultPath = _currentPath.Path;
 
-            var input = new Receiver();
-            _entry = await input.Receive(_defaultPath, _validation);
+            var receiver = new Receiver();
+            _entry = await receiver.Receive(_defaultPath, _validation);
 
             await ToDistribute();
         }
@@ -69,40 +70,36 @@ namespace ManagerDirectory.Services
         {
             try
             {
-                var command = await Task.Run(() => _entry.Split(" ")[0]);
-
-                if (command.Contains(':'))
-                    _defaultPath = command + "\\";
+                if (_entry.command.Contains(':'))
+                    _defaultPath = _entry.command + "\\";
 
                 var path = string.Empty;
                 var newPath = string.Empty;
 
-                switch (command)
+                switch (_entry.command)
                 {
                     case "disk":
                         await CallOutputAsync();
                         break;
                     case "ls":
-                        path = _entry.Length == command.Length ? _defaultPath : _entry.Remove(0, command.Length + 1);
-                        path = await _validation.CheckEnteredPathAsync(path, _defaultPath);
+                        path = await _validation.CheckEnteredPathAsync(_entry.path.OriginalString, _defaultPath);
                         await CallOutputAsync(path, 10);
                         break;
                     case "lsAll":
-                        path = _entry.Length == command.Length ? _defaultPath : _entry.Remove(0, command.Length + 1);
-                        path = await _validation.CheckEnteredPathAsync(path, _defaultPath);
+                        path = await _validation.CheckEnteredPathAsync(_entry.path.OriginalString, _defaultPath);
                         await CallOutputAsync(path, Directory.GetDirectories(path).Length + Directory.GetFiles(path).Length);
                         break;
                     case "cp":
-                        path = await TransformAsync(_entry.Remove(0, command.Length + 1));
-                        path = path.TrimEnd();
-                        newPath = _entry.Remove(0, command.Length + path.Length + 2) + "\\";
-                        await CallCopyingAsync(path, newPath);
+                        //path = await TransformAsync(_entry.Remove(0, _entry.command.Length + 1));
+                        //path = path.TrimEnd();
+                        //newPath = _entry.Remove(0, _entry.command.Length + path.Length + 2) + "\\";
+                        //await CallCopyingAsync(path, newPath);
                         break;
                     case "clear":
                         Console.Clear();
                         break;
                     case "cd":
-                        path = _entry.Remove(0, command.Length + 1) + "\\";
+                        path = _entry.path + "\\";
                         _defaultPath = await _validation.CheckEnteredPathAsync(path, _defaultPath);
                         break;
                     case "cd..":
@@ -113,7 +110,7 @@ namespace ManagerDirectory.Services
                         _defaultPath = Directory.GetDirectoryRoot(_defaultPath);
                         break;
                     case "info":
-                        await CallInformerAsync(command);
+                        await CallInformerAsync(_entry.command);
                         await _displaying.OutputInfoFilesAndDirectoryAsync(_informer);
                         break;
                     case "help":
@@ -121,11 +118,11 @@ namespace ManagerDirectory.Services
                         Console.WriteLine(help);
                         break;
                     case "rm":
-                        await CallDeletionAsync(command);
+                        await CallDeletionAsync(_entry.command);
                         break;
                 }
 
-                if (command != "exit")
+                if (_entry.command != "exit")
                 {
                     _currentPath.Path = string.Empty;
                     await RunAsync();
@@ -159,11 +156,11 @@ namespace ManagerDirectory.Services
 
         private async Task CallDeletionAsync(string command)
         {
-            var entry = await _validation.CheckEnteredPathAsync(_entry.Remove(0, command.Length + 1), _defaultPath);
+            var entry = await _validation.CheckEnteredPathAsync(_entry.path.AbsolutePath, _defaultPath);
 
             var deletion = new RemovingService();
 
-            if (Path.GetExtension(entry) != string.Empty)
+            if (!string.IsNullOrEmpty(Path.GetExtension(entry)))
                 deletion.FullPathFile = entry;
             else
                 deletion.FullPathDirectory = entry;
@@ -173,10 +170,10 @@ namespace ManagerDirectory.Services
         {
             var entry = string.Empty;
 
-            if (_entry.Length == command.Length)
+            if (_entry.command.Length == command.Length)
                 entry = _defaultPath;
             else
-                entry = await _validation.CheckEnteredPathAsync(_entry.Remove(0, command.Length + 1), _defaultPath);
+                entry = await _validation.CheckEnteredPathAsync(_entry.path.AbsolutePath, _defaultPath);
 
             if (Path.GetExtension(entry) != string.Empty)
             {

@@ -1,20 +1,19 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
-using ManagerDirectory.Actions;
 
 namespace ManagerDirectory.Validation
 {
     public sealed class CustomValidation
     {
-        private readonly Commands _commands = new();
+        private readonly Commands.Commands _commands = new();
 
-		internal async Task<bool> CheckForInputAsync(string nameCommand)
+		internal async Task<bool> CheckForInputAsync(string cmd)
         {
             return await Task.Run(() =>
             {
                 foreach (var command in _commands.ArrayCommands)
                 {
-                    if ((command == nameCommand.Split(" ")[0] && nameCommand != string.Empty) || nameCommand.Contains(':'))
+                    if ((command.Equals(cmd) && !string.IsNullOrEmpty(cmd)) || cmd.Contains(':'))
                         return true;
                 }
 

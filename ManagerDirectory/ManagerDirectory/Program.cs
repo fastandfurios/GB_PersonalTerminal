@@ -8,7 +8,7 @@ namespace ManagerDirectory
 	{
 		static async Task Main(string[] args)
         {
-            Console.Title = "ManagerDirectory";
+            Console.Title = "PersonalTerminal";
 
 			var service = new ManagerService();
             await service.StartAsync();
