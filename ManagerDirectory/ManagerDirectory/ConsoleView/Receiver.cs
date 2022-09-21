@@ -17,7 +17,7 @@ namespace ManagerDirectory.ConsoleView
 
                 do
                 {
-                    Console.Write($@"{defaultPath.OriginalString}> ");
+                    Console.Write($"{defaultPath.OriginalString}> ");
                     entries = Console.ReadLine()!
                         .Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
 

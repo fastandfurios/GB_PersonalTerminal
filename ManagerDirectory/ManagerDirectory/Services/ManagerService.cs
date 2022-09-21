@@ -19,17 +19,8 @@ namespace ManagerDirectory.Services
         private readonly Displaying _displaying = new();
         private readonly Repository _repository = new();
         private CurrentPath _currentPath = new();
-        private readonly InformingService _informer;
+        private readonly InformingService _informer = new();
         private readonly CustomValidation _validation = new();
-
-        public ManagerService()
-        {
-        }
-
-        public ManagerService(InformingService informer) : this()
-        {
-            _informer = informer;
-        }
 
         public async Task StartAsync()
         {
@@ -42,7 +33,6 @@ namespace ManagerDirectory.Services
 					File.Create(_fileName).Close();
                     _currentPath.Path = _defaultPath.OriginalString;
 				}
-                    
 
                 foreach (var drive in DriveInfo.GetDrives())
                 {
@@ -70,10 +60,10 @@ namespace ManagerDirectory.Services
             var receiver = new Receiver();
             _entry = await receiver.ReceiveAsync(_defaultPath, _validation);
 
-            await ToDistribute();
+            await SwitchCommandAsync();
         }
 
-        private async Task ToDistribute()
+        private async Task SwitchCommandAsync()
         {
             try
             {
@@ -102,9 +92,7 @@ namespace ManagerDirectory.Services
                         //newPath = _entry.Remove(0, _entry.command.Length + path.Length + 2) + "\\";
                         //await CallCopyingAsync(path, newPath);
                         break;
-                    case "clear":
-                        Console.Clear();
-                        break;
+                    case "clear": Console.Clear(); break;
                     case "cd":
                         path = new Uri(Path.Combine(_entry.path.OriginalString, "\\"));
                         _defaultPath = await _validation.CheckEnteredPathAsync(path, _defaultPath);
@@ -123,9 +111,7 @@ namespace ManagerDirectory.Services
                     case "help":
                         Console.WriteLine(await _repository.GetHelp());
                         break;
-                    case "rm":
-                        await CallDeletionAsync();
-                        break;
+                    case "rm": await CallDeletionAsync(); break;
                 }
 
                 if (_entry.command != "exit")
@@ -157,7 +143,7 @@ namespace ManagerDirectory.Services
         private async Task CallCopyingAsync(string name, Uri newPath)
         {
             var copying = new CopyingService();
-            await copying.Copy(_defaultPath, name, newPath);
+            await copying.CopyAsync(_defaultPath, name, newPath);
         }
 
         private async Task CallDeletionAsync()
@@ -191,35 +177,6 @@ namespace ManagerDirectory.Services
                 _informer.FullPathDirectory = path;
                 _informer.FullPathFile = null;
             }
-        }
-
-        private async Task<string> TransformAsync(string str)
-        {
-            return await Task.Run(async () =>
-            {
-                for (int i = str.Length - 1; i > 0; i--)
-                {
-                    if (str[i] != ':')
-                        str = str.Remove(i, 1);
-                    else
-                    {
-                        await Task.Run(() =>
-                        {
-                            for (int j = str.Length - 1; j > 0; j--)
-                            {
-                                if (str[j] != ' ')
-                                    str = str.Remove(j, 1);
-                                else
-                                    break;
-                            }
-                        });
-
-                        break;
-                    }
-                }
-
-                return str;
-            });
         }
     }
 }

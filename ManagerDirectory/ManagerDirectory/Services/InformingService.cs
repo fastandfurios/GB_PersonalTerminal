@@ -31,7 +31,9 @@ namespace ManagerDirectory.Services
                 var countFiles = directoryInfo.GetFiles("*.*", SearchOption.AllDirectories).Length;
                 long size = 0;
 
-                directoryInfo.GetFiles("*.*", SearchOption.AllDirectories).ToList().ForEach(file => size += file.Length);
+                directoryInfo.GetFiles("*.*", SearchOption.AllDirectories)
+                    .ToList()
+                    .ForEach(file => size += file.Length);
 
                 return $"Количество папок: {countDirectory}\n" +
                        $"Количество файлов: {countFiles}\n" +
