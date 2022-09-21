@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,31 +10,30 @@ namespace ManagerDirectory.ConsoleView
     {
 	    private int _countFiles, _countDirectory;
 
-	    internal async Task OutputTreeAsync(Uri path, int maxObjects)
+	    internal async Task ViewTreeAsync(Uri path, int maxCountObjects)
 	    {
 		    var directoryInfo = new DirectoryInfo(path.OriginalString);
-		    var length = await Task.Run(() => directoryInfo.Name.Length / 2);
-		    int spaceLength;
-		    var arraySelector = await Task.Run(() => path.OriginalString.Where(s => s == '\\')
-                .ToList());
+		    var length = directoryInfo.Name.Length / 2;
+		    int countSpace;
+            var countSelectors = path.OriginalString.Count(symb => symb == '\\');
 
-			if (arraySelector.Count > 2)
-				OutputTree(" ~\\" + directoryInfo.Name, arraySelector, directoryInfo.Name.Length / 2 + 2, out spaceLength);
+			if (countSelectors > 2)
+				ViewTree(" ~\\" + directoryInfo.Name, directoryInfo.Name.Length / 2 + 2, out countSpace);
 		    else
-				OutputTree(" " + path, arraySelector, path.OriginalString.Length - length, out spaceLength);
+				ViewTree(" " + path.OriginalString, path.OriginalString.Length - length, out countSpace);
 			
 			await Task.Run(() =>
             {
                 foreach (var directory in directoryInfo.GetDirectories())
                 {
-                    if (_countDirectory < maxObjects)
+                    if (_countDirectory < maxCountObjects)
                     {
-                        Console.WriteLine($@"{new string(' ', spaceLength)}|{new string('-', length + 1)}{directory.Name}");
+                        Console.WriteLine($@"{new string(' ', countSpace)}|{new string('-', length + 1)}{directory.Name}");
                         _countDirectory++;
                     }
                     else
                     {
-                        Console.WriteLine($@"{new string(' ', spaceLength)}|{new string('-', length + 1)}...");
+                        Console.WriteLine($@"{new string(' ', countSpace)}|{new string('-', length + 1)}...");
                         break;
                     }
                 }
@@ -47,17 +45,17 @@ namespace ManagerDirectory.ConsoleView
             {
                 foreach (var file in directoryInfo.GetFiles())
                 {
-                    if (_countFiles < maxObjects)
+                    if (_countFiles < maxCountObjects)
                     {
-                        Console.Write($@"{new string(' ', spaceLength)}|{new string('-', length + 1)}");
+                        Console.Write($@"{new string(' ', countSpace)}|{new string('-', length + 1)}");
                         Console.ForegroundColor = ConsoleColor.DarkGreen;
-                        Console.Write($@"{file.Name}");
+                        Console.WriteLine($@"{file.Name}");
                         Console.ResetColor();
                         _countFiles++;
                     }
                     else
                     {
-                        Console.Write($@"{new string(' ', spaceLength)}|{new string('-', length + 1)}...");
+                        Console.Write($@"{new string(' ', countSpace)}|{new string('-', length + 1)}...");
                         break;
                     }
                 }
@@ -66,13 +64,12 @@ namespace ManagerDirectory.ConsoleView
 			_countFiles = 0;
 		}
 
-	    private void OutputTree(string str, List<char> arraySelector, int exp, out int spaceLength )
+	    private void ViewTree(string str, int exp, out int spaceLength )
 	    {
 		    Console.ForegroundColor = ConsoleColor.Yellow;
 		    Console.WriteLine(str);
 		    Console.ResetColor();
 		    spaceLength = exp;
-		    arraySelector.RemoveRange(0, arraySelector.Count);
 		}
 		
 	    internal async Task GetDisksAsync()

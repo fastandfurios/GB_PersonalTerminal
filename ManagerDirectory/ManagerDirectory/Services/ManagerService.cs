@@ -35,7 +35,14 @@ namespace ManagerDirectory.Services
         {
             await Task.Run(async () =>
             {
-                _currentPath = await _repository.GetPath(_fileName, _currentPath, _defaultPath);
+                if(File.Exists(_fileName))
+                    _currentPath = await _repository.GetPath(_fileName, _currentPath, _defaultPath);
+                else
+                {
+					File.Create(_fileName).Close();
+                    _currentPath.Path = _defaultPath.OriginalString;
+				}
+                    
 
                 foreach (var drive in DriveInfo.GetDrives())
                 {
@@ -61,7 +68,7 @@ namespace ManagerDirectory.Services
                 _defaultPath = new Uri(_currentPath.Path);
 
             var receiver = new Receiver();
-            _entry = await receiver.Receive(_defaultPath, _validation);
+            _entry = await receiver.ReceiveAsync(_defaultPath, _validation);
 
             await ToDistribute();
         }
@@ -145,7 +152,7 @@ namespace ManagerDirectory.Services
             => await _displaying.GetDisksAsync();
 
         private async Task CallOutputAsync(Uri path, int maxObjects)
-            => await _displaying.OutputTreeAsync(path, maxObjects);
+            => await _displaying.ViewTreeAsync(path, maxObjects);
 
         private async Task CallCopyingAsync(string name, Uri newPath)
         {
