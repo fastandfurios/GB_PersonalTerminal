@@ -68,7 +68,7 @@ namespace ManagerDirectory.Services
             if (File.Exists(_fileName) && !string.IsNullOrEmpty(_currentPath.Path))
                 _defaultPath = new Uri(_currentPath.Path);
 
-            _entry = await _receiver.Receive(_defaultPath, _validation);
+            _entry = await _receiver.ReceiveAsync(_defaultPath, _validation);
 
             await SwitchCommandAsync();
         }
