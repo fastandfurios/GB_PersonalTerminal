@@ -11,24 +11,26 @@ namespace ManagerDirectory.Services
 {
     internal sealed class ManagerService
     {
+        #region fields
         private (string command, Uri path) _entry;
         private Uri _defaultPath = new(Resources.DefaultPath);
         private readonly string _fileName = Resources.CurrentPath;
         private readonly string _fileLogErrors = Resources.FileLogErrors;
-
-        private readonly Displaying _displaying = new();
-        private readonly Repository _repository = new();
+        private readonly Displaying _displaying;
+        private readonly Receiver _receiver;
+        private readonly Repository _repository;
         private CurrentPath _currentPath = new();
         private readonly InformingService _informer;
-        private readonly CustomValidation _validation = new();
+        private readonly CustomValidation _validation;
+        #endregion
 
-        public ManagerService()
+        public ManagerService(Displaying displaying, 
+            Receiver receiver, 
+            Repository repository,
+            CustomValidation validation,
+            InformingService informer)
         {
-        }
-
-        public ManagerService(InformingService informer) : this()
-        {
-            _informer = informer;
+            (_displaying, _receiver, _repository, _validation, _informer) = (displaying, receiver, repository, validation, informer);
         }
 
         public async Task StartAsync()
@@ -60,8 +62,7 @@ namespace ManagerDirectory.Services
             if (File.Exists(_fileName) && !string.IsNullOrEmpty(_currentPath.Path))
                 _defaultPath = new Uri(_currentPath.Path);
 
-            var receiver = new Receiver();
-            _entry = await receiver.Receive(_defaultPath, _validation);
+            _entry = await _receiver.Receive(_defaultPath, _validation);
 
             await ToDistribute();
         }
@@ -95,7 +96,7 @@ namespace ManagerDirectory.Services
                         //newPath = _entry.Remove(0, _entry.command.Length + path.Length + 2) + "\\";
                         //await CallCopyingAsync(path, newPath);
                         break;
-                    case "clear":
+                    case "cls":
                         Console.Clear();
                         break;
                     case "cd":
