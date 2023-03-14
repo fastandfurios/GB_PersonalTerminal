@@ -10,7 +10,7 @@
 			"cp",
 			"rm",
 			"info",
-			"clear",
+			"cls",
 			"cd",
 			"cd..",
 			"cd\\",
