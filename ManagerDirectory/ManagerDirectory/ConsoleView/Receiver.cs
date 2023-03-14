@@ -7,7 +7,7 @@ namespace ManagerDirectory.ConsoleView
 {
     internal sealed class Receiver
     {
-        internal async Task<(string command, Uri path)> Receive(Uri defaultPath, CustomValidation validation)
+        internal async Task<(string command, Uri path)> ReceiveAsync(Uri defaultPath, CustomValidation validation)
         {
             var bs = 512;
             using var sr = new StreamReader(Console.OpenStandardInput(), bufferSize: bs);

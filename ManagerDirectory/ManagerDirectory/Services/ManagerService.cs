@@ -37,7 +37,13 @@ namespace ManagerDirectory.Services
         {
             await Task.Run(async () =>
             {
-                _currentPath = await _repository.GetPath(_fileName, _currentPath, _defaultPath);
+                if(File.Exists(_fileName))
+                    _currentPath = await _repository.GetPath(_fileName, _currentPath, _defaultPath);
+                else
+                {
+					File.Create(_fileName).Close();
+                    _currentPath.Path = _defaultPath.OriginalString;
+				}
 
                 foreach (var drive in DriveInfo.GetDrives())
                 {
@@ -64,10 +70,10 @@ namespace ManagerDirectory.Services
 
             _entry = await _receiver.Receive(_defaultPath, _validation);
 
-            await ToDistribute();
+            await SwitchCommandAsync();
         }
 
-        private async Task ToDistribute()
+        private async Task SwitchCommandAsync()
         {
             try
             {
@@ -117,9 +123,7 @@ namespace ManagerDirectory.Services
                     case "help":
                         Console.WriteLine(await _repository.GetHelp());
                         break;
-                    case "rm":
-                        await CallDeletionAsync();
-                        break;
+                    case "rm": await CallDeletionAsync(); break;
                 }
 
                 if (_entry.command != "exit")
@@ -146,12 +150,12 @@ namespace ManagerDirectory.Services
             => await _displaying.GetDisksAsync();
 
         private async Task CallOutputAsync(Uri path, int maxObjects)
-            => await _displaying.OutputTreeAsync(path, maxObjects);
+            => await _displaying.ViewTreeAsync(path, maxObjects);
 
         private async Task CallCopyingAsync(string name, Uri newPath)
         {
             var copying = new CopyingService();
-            await copying.Copy(_defaultPath, name, newPath);
+            await copying.CopyAsync(_defaultPath, name, newPath);
         }
 
         private async Task CallDeletionAsync()
@@ -185,35 +189,6 @@ namespace ManagerDirectory.Services
                 _informer.FullPathDirectory = path;
                 _informer.FullPathFile = null;
             }
-        }
-
-        private async Task<string> TransformAsync(string str)
-        {
-            return await Task.Run(async () =>
-            {
-                for (int i = str.Length - 1; i > 0; i--)
-                {
-                    if (str[i] != ':')
-                        str = str.Remove(i, 1);
-                    else
-                    {
-                        await Task.Run(() =>
-                        {
-                            for (int j = str.Length - 1; j > 0; j--)
-                            {
-                                if (str[j] != ' ')
-                                    str = str.Remove(j, 1);
-                                else
-                                    break;
-                            }
-                        });
-
-                        break;
-                    }
-                }
-
-                return str;
-            });
         }
     }
 }

@@ -7,7 +7,7 @@ namespace ManagerDirectory.Services
 {
     internal sealed class CopyingService
     {
-        internal async Task Copy(Uri oldPath, string name, Uri newPath)
+        internal async Task CopyAsync(Uri oldPath, string name, Uri newPath)
         {
             if (!string.IsNullOrEmpty(Path.GetExtension(name)))
             {
