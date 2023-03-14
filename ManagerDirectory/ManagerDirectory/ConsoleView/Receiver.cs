@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using ManagerDirectory.Validation;
 
@@ -8,32 +9,31 @@ namespace ManagerDirectory.ConsoleView
     {
         internal async Task<(string command, Uri path)> Receive(Uri defaultPath, CustomValidation validation)
         {
-            return await Task.Run(async () =>
+            var bs = 512;
+            using var sr = new StreamReader(Console.OpenStandardInput(), bufferSize: bs);
+            var valid = true;
+            var entries = new string[2];
+            var command = string.Empty;
+            var path = new Uri(defaultPath.OriginalString);
+
+            do
             {
-                var valid = true;
-                var entries = new string[2];
-                var command = string.Empty;
-                var path = new Uri(defaultPath.OriginalString);
+                Console.Write($@"{Environment.UserName}#{defaultPath.OriginalString}> ");
+                entries = (await sr.ReadLineAsync())!
+                    .Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
 
-                do
+                if (entries.Length != 0)
                 {
-                    Console.Write($@"{defaultPath.OriginalString}> ");
-                    entries = Console.ReadLine()!
-                        .Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
+                    command = entries[0];
 
-                    if (entries.Length != 0)
-                    {
-                        command = entries[0];
+                    if (entries.Length > 1)
+                        Uri.TryCreate(entries[1], UriKind.Relative, out path);
 
-                        if (entries.Length > 1)
-                            Uri.TryCreate(entries[1], UriKind.Relative, out path);
+                    valid = await validation.CheckForInputAsync(command);
+                }
+            } while (!valid);
 
-                        valid = await validation.CheckForInputAsync(command);
-                    }
-                } while (!valid);
-
-                return (command, path);
-			});
+            return (command, path);
         }
     }
 }
