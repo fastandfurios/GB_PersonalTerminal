@@ -9,8 +9,14 @@ namespace ManagerDirectory.ConsoleView
     internal sealed class Displaying
     {
 	    private int _countFiles, _countDirectories;
+        private readonly InformingService _informingService;
 
-	    internal async Task ViewTreeAsync(Uri path, int maxCountObjects)
+        public Displaying(InformingService informingService)
+        {
+            _informingService = informingService;
+        }
+
+        internal async Task ViewTreeAsync(Uri path, int maxCountObjects)
 	    {
 		    var directoryInfo = new DirectoryInfo(path.OriginalString);
 		    var length = directoryInfo.Name.Length / 2;
@@ -77,6 +83,6 @@ namespace ManagerDirectory.ConsoleView
                 .ToList()
                 .ForEach(drive => Console.WriteLine($@"Имя диска: {drive.Name}")));
 
-        internal async Task OutputInfoFilesAndDirectoryAsync(InformingService informer) => await Task.Run(() => Console.WriteLine(informer));
+        internal async Task OutputInfoFilesAndDirectoryAsync() => await Task.Run(() => Console.WriteLine(_informingService));
     }
 }

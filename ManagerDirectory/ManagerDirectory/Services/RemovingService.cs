@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ManagerDirectory.Services
@@ -39,8 +40,8 @@ namespace ManagerDirectory.Services
 
         private async Task DeleteAsync()
         {
-            _countFiles = Directory.GetFiles(_fullPathDirectory.OriginalString, "*.*", SearchOption.AllDirectories).Length;
-            _countDirectory = Directory.GetDirectories(_fullPathDirectory.OriginalString, "*", SearchOption.AllDirectories).Length;
+            _countFiles = Directory.EnumerateFiles(_fullPathDirectory.OriginalString, "*.*", SearchOption.AllDirectories).Count();
+            _countDirectory = Directory.EnumerateDirectories(_fullPathDirectory.OriginalString, "*", SearchOption.AllDirectories).Count();
 
             if (_countFiles != 0)
             {

@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using ManagerDirectory.ConsoleView;
+using ManagerDirectory.Infrastructure.Models;
 using ManagerDirectory.Infrastructure.Repositories;
 using ManagerDirectory.Services;
 using ManagerDirectory.Validation;
@@ -19,10 +20,11 @@ namespace ManagerDirectory
 
             Console.Title = "PersonalTerminal";
 
-            var manager = host.Services.GetService(typeof(ManagerService)) as ManagerService;
-
-            await manager!.RunAsync();
-            await manager!.StartAsync();
+            if (host.Services.GetService(typeof(ManagerService)) is ManagerService manager)
+            {
+                await manager.RunAsync();
+                await manager.StartAsync();
+            }
         }
 
         static IHostBuilder CreateHostBuilder(string[] args)
@@ -37,6 +39,7 @@ namespace ManagerDirectory
             services.AddTransient<Repository>();
             services.AddTransient<CustomValidation>();
             services.AddTransient<InformingService>();
+            services.AddTransient<CurrentPath>();
         }
     }
 }

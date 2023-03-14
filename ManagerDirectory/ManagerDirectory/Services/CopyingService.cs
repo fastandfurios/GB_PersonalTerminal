@@ -13,7 +13,7 @@ namespace ManagerDirectory.Services
             {
                 await Task.Run(() =>
                 {
-                    Directory.GetFiles(oldPath.OriginalString, name, SearchOption.TopDirectoryOnly).ToList().ForEach(file =>
+                    Directory.EnumerateFiles(oldPath.OriginalString, name, SearchOption.TopDirectoryOnly).ToList().ForEach(file =>
                         File.Copy(file, file.Replace(oldPath.OriginalString, newPath.OriginalString), true));
 
                     Console.WriteLine("Копирование прошло успешно!");
@@ -21,15 +21,16 @@ namespace ManagerDirectory.Services
             }
             else
             {
-                await Task.WhenAll(Task.Run(() =>
+                await Task.WhenAll(
+                    Task.Run(() =>
                     {
-                        Directory.GetDirectories(oldPath.OriginalString, name, SearchOption.TopDirectoryOnly).ToList().ForEach(directory =>
+                        Directory.EnumerateDirectories(oldPath.OriginalString, name, SearchOption.TopDirectoryOnly).ToList().ForEach(directory =>
                             Directory.CreateDirectory(directory.Replace(oldPath.OriginalString, newPath.OriginalString)));
 
                     }),
                     Task.Run(() =>
                     {
-                        Directory.GetFiles(oldPath + name, "*.*", SearchOption.TopDirectoryOnly).ToList().ForEach(file =>
+                        Directory.EnumerateFiles(oldPath + name, "*.*", SearchOption.TopDirectoryOnly).ToList().ForEach(file =>
                             File.Copy(file, file.Replace(oldPath.OriginalString, newPath.OriginalString), true));
 
                         Console.WriteLine("Копирование прошло успешно!");

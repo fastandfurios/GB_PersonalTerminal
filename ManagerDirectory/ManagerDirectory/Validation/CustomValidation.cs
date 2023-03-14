@@ -1,22 +1,26 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using cm = ManagerDirectory.Commands.Commands;
 
 namespace ManagerDirectory.Validation
 {
     public sealed class CustomValidation
     {
-        private readonly Commands.Commands _commands = new();
-
-		internal async Task<bool> CheckForInputAsync(string cmd)
+        internal async Task<bool> CheckForCommandAsync(string cmd)
         {
             return await Task.Run(() =>
             {
-                foreach (var command in _commands.ArrayCommands)
-                {
-                    if ((command.Equals(cmd) && !string.IsNullOrEmpty(cmd)) || cmd.Contains(':'))
+                if ((cm.CD.Equals(cmd) || cm.CD_DOT.Equals(cmd)
+                        || cm.CD_SLASH.Equals(cmd) || cm.CLS.Equals(cmd)
+                        || cm.CP.Equals(cmd) || cm.DISK.Equals(cmd)
+                        || cm.EXIT.Equals(cmd) || cm.HELP.Equals(cmd)
+                        || cm.INFO.Equals(cmd) || cm.LS.Equals(cmd)
+                        || cm.LS_ALL.Equals(cmd) || cm.RM.Equals(cmd)
+                        && !string.IsNullOrEmpty(cmd)) 
+                        || cmd.Contains(':'))
+
                         return true;
-                }
 
                 return false;
 			});

@@ -7,7 +7,14 @@ namespace ManagerDirectory.ConsoleView
 {
     internal sealed class Receiver
     {
-        internal async Task<(string command, Uri path)> ReceiveAsync(Uri defaultPath, CustomValidation validation)
+        private readonly CustomValidation _validation;
+
+        public Receiver(CustomValidation validation)
+        {
+            _validation = validation;
+        }
+
+        internal async Task<(string command, Uri path)> ReceiveAsync(Uri defaultPath)
         {
             var bs = 512;
             using var sr = new StreamReader(Console.OpenStandardInput(), bufferSize: bs);
@@ -29,7 +36,7 @@ namespace ManagerDirectory.ConsoleView
                     if (entries.Length > 1)
                         Uri.TryCreate(entries[1], UriKind.Relative, out path);
 
-                    valid = await validation.CheckForInputAsync(command);
+                    valid = await _validation.CheckForCommandAsync(command);
                 }
             } while (!valid);
 
