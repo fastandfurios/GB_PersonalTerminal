@@ -4,19 +4,19 @@ using System.Threading.Tasks;
 using ManagerDirectory.Infrastructure.Models;
 using ManagerDirectory.Properties;
 
-namespace ManagerDirectory.Infrastructure.Repositories
+namespace ManagerDirectory.Services
 {
-	public class Repository
+    public class SerializeDeserializeService
     {
         private readonly CurrentPath _currentPath;
 
-        public Repository(CurrentPath currentPath)
+        public SerializeDeserializeService(CurrentPath currentPath)
         {
             _currentPath = currentPath;
         }
 
         internal async Task<CurrentPath> GetPathAsync(string fileName, string defaultPath)
-		{
+        {
             try
             {
                 await using var stream = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -31,7 +31,7 @@ namespace ManagerDirectory.Infrastructure.Repositories
 
         internal async Task SavePathAsync(string fileName, string currentPath)
         {
-	        _currentPath.Path = currentPath;
+            _currentPath.Path = currentPath;
             await using var fileStream = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             await JsonSerializer.SerializeAsync(fileStream, _currentPath, typeof(CurrentPath));
         }
@@ -41,5 +41,5 @@ namespace ManagerDirectory.Infrastructure.Repositories
             await using var stream = new FileStream(Resources.HelpContent, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
             return await JsonSerializer.DeserializeAsync<Help>(stream);
         }
-	}
+    }
 }

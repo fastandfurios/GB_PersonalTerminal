@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using ManagerDirectory.ConsoleView;
 using ManagerDirectory.Infrastructure.Models;
-using ManagerDirectory.Infrastructure.Repositories;
 using ManagerDirectory.Properties;
 using ManagerDirectory.Validation;
 using cm = ManagerDirectory.Commands.Commands;
@@ -20,7 +19,7 @@ namespace ManagerDirectory.Services
         private readonly string _fileLogErrors = Resources.FileLogErrors;
         private readonly Displaying _displaying;
         private readonly Receiver _receiver;
-        private readonly Repository _repository;
+        private readonly SerializeDeserializeService _sdservice;
         private CurrentPath _currentPath;
         private readonly InformingService _informer;
         private readonly CustomValidation _validation;
@@ -29,13 +28,13 @@ namespace ManagerDirectory.Services
 
         public ManagerService(Displaying displaying, 
             Receiver receiver, 
-            Repository repository,
+            SerializeDeserializeService repository,
             CustomValidation validation,
             InformingService informer,
             CurrentPath currentPath,
             StartService startService)
         {
-            (_displaying, _receiver, _repository, _validation, _informer, _currentPath, _startService) = 
+            (_displaying, _receiver, _sdservice, _validation, _informer, _currentPath, _startService) = 
 	            (displaying, receiver, repository, validation, informer, currentPath, startService);
         }
         
@@ -63,15 +62,16 @@ namespace ManagerDirectory.Services
                 switch (_entry.command)
                 {
                     case cm.DISK:
-	                    CallOutput();
+	                    PrintDisks();
                         break;
                     case cm.LS:
                         path = await _validation.CheckEnteredPathAsync(_defaultPath, _entry.path);
-                        await CallOutputAsync(path, 10);
+                        await ViewTreeAsync(path, 10);
                         break;
                     case cm.LS_ALL:
-                        path = await _validation.CheckEnteredPathAsync(_defaultPath, _entry.path);
-                        await CallOutputAsync(path, Directory.EnumerateDirectories(path).Count() + Directory.EnumerateFiles(path).Count());
+	                    path = await _validation.CheckEnteredPathAsync(_defaultPath, _entry.path);
+	                    var maxObjects = Directory.EnumerateDirectories(path).Count() + Directory.EnumerateFiles(path).Count();
+						await ViewTreeAsync(path, maxObjects);
                         break;
                     case cm.CP:
                         //path = await TransformAsync(_entry.Remove(0, _entry.command.Length + 1));
@@ -97,7 +97,7 @@ namespace ManagerDirectory.Services
                         await _displaying.OutputInfoFilesAndDirectoryAsync();
                         break;
                     case cm.HELP:
-                        Console.WriteLine(await _repository.GetHelpAsync());
+                        Console.WriteLine(await _sdservice.GetHelpAsync());
                         break;
                     case cm.RM: 
                         await CallDeletionAsync(); 
@@ -106,13 +106,13 @@ namespace ManagerDirectory.Services
 
                 if (_entry.command != cm.EXIT)
                 {
-                    _currentPath.Path = string.Empty;
+	                _currentPath.Path = string.Empty;
                     await SwitchCommandAsync();
                 }
                 else
                 {
                     _currentPath.Path = _defaultPath;
-                    await _repository.SavePathAsync(_fileName, _currentPath.Path);
+                    await _sdservice.SavePathAsync(_fileName, _currentPath.Path);
                 }
             }
             catch (Exception e)
@@ -124,16 +124,14 @@ namespace ManagerDirectory.Services
             }
         }
 
-        private void CallOutput()
+        private void PrintDisks()
         {
 	        _displaying.PrintDisks();
-            _displaying.Dispose();
         }
 
-        private async Task CallOutputAsync(string path, int maxObjects)
+        private async Task ViewTreeAsync(string path, int maxObjects)
         {
 	        await _displaying.ViewTreeAsync(path, maxObjects);
-            _displaying.Dispose();
 		}
 
         private async Task CallCopyingAsync(string name, string newPath)
@@ -144,7 +142,7 @@ namespace ManagerDirectory.Services
 
         private async Task CallDeletionAsync()
         {
-            var entry = await _validation.CheckEnteredPathAsync(_entry.path, _defaultPath);
+            var entry = await _validation.CheckEnteredPathAsync(_defaultPath, _entry.path);
 
             var deletion = new RemovingService();
 
@@ -161,7 +159,7 @@ namespace ManagerDirectory.Services
             if (_entry.command.Length == command.Length)
                 path = _defaultPath;
             else
-                path = await _validation.CheckEnteredPathAsync(_entry.path, _defaultPath);
+                path = await _validation.CheckEnteredPathAsync(_defaultPath, _entry.path);
 
             if (!string.IsNullOrEmpty(Path.GetExtension(path)))
             {

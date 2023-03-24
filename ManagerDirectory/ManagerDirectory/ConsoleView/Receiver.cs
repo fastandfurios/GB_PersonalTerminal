@@ -29,15 +29,13 @@ namespace ManagerDirectory.ConsoleView
                 entries = (await sr.ReadLineAsync())!
                     .Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
 
-                if (entries.Length != 0)
-                {
-                    command = entries[0];
+                if (entries.Length == 0) continue;
+                command = entries[0];
 
-                    if (entries.Length > 1)
-                        path =entries[1];
+                if (entries.Length > 1)
+	                path =entries[1];
 
-                    valid = await _validation.CheckForCommandAsync(command);
-                }
+                valid = await _validation.CheckForCommandAsync(command);
             } while (!valid);
 
             return (command, path);

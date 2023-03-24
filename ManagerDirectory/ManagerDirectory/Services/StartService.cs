@@ -1,18 +1,17 @@
 ﻿using ManagerDirectory.Infrastructure.Models;
-using ManagerDirectory.Infrastructure.Repositories;
 using ManagerDirectory.Properties;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace ManagerDirectory.Services
 {
-	public class StartService
+    public class StartService
 	{
-		private readonly Repository _repository;
+		private readonly SerializeDeserializeService _repository;
 		private CurrentPath _currentPath;
 		private readonly string _fileName = Resources.CurrentPath;
 
-		public StartService(Repository repository, CurrentPath currentPath)
+		public StartService(SerializeDeserializeService repository, CurrentPath currentPath)
 		{
 			_repository = repository;
 			_currentPath = currentPath;

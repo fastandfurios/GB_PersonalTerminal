@@ -1,30 +1,27 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using ManagerDirectory.Services;
 
 namespace ManagerDirectory.ConsoleView
 {
-    internal sealed class Displaying : IDisposable
+    internal sealed class Displaying
     {
 	    private int _countFiles, _countDirectories;
-        private readonly InformingService _informingService;
-        private readonly StreamWriter _sw; 
+        private readonly InformingService _informingService; 
 
         public Displaying(InformingService informingService)
         {
             _informingService = informingService;
-            _sw = new StreamWriter(Console.OpenStandardOutput(), bufferSize: 512, encoding: Encoding.UTF8);
 		}
 
         internal async Task ViewTreeAsync(string path, int maxCountObjects)
-	    {
-		    var directoryInfo = new DirectoryInfo(path);
+        {
+	        var directoryInfo = new DirectoryInfo(path);
 		    var length = directoryInfo.Name.Length / 2;
 		    int countSpaces;
-            var countSelectors = path.Count(symb => symb == '\\');
+            var countSelectors = path.Count(slash => slash == '\\');
 
 			if (countSelectors > 2)
 				ViewTree(" ~\\" + directoryInfo.Name, directoryInfo.Name.Length / 2 + 2, out countSpaces);
@@ -33,16 +30,16 @@ namespace ManagerDirectory.ConsoleView
 			
 			await Task.Run(() =>
             {
-                foreach (var directory in directoryInfo.GetDirectories())
+                foreach (var directory in directoryInfo.EnumerateDirectories())
                 {
                     if (_countDirectories < maxCountObjects)
                     {
-                        _sw.WriteLine($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}{directory.Name}");
+                        Console.WriteLine($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}{directory.Name}");
                         _countDirectories++;
                     }
                     else
                     {
-                        _sw.WriteLine($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}...");
+                        Console.WriteLine($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}...");
                         break;
                     }
                 }
@@ -52,19 +49,17 @@ namespace ManagerDirectory.ConsoleView
 
             await Task.Run(() =>
             {
-                foreach (var file in directoryInfo.GetFiles())
+                foreach (var file in directoryInfo.EnumerateFiles())
                 {
                     if (_countFiles < maxCountObjects)
                     {
-                        _sw.Write($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}");
-                        Console.ForegroundColor = ConsoleColor.DarkGreen;
-                        _sw.WriteLine($@"{file.Name}");
-                        Console.ResetColor();
+                        Console.Write($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}");
+                        Console.WriteLine($@"{file.Name}");
                         _countFiles++;
                     }
                     else
                     {
-                        _sw.Write($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}...");
+                        Console.WriteLine($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}...");
                         break;
                     }
                 }
@@ -73,12 +68,12 @@ namespace ManagerDirectory.ConsoleView
 			_countFiles = 0;
 		}
 
-	    private void ViewTree(string entry, int number, out int countSpaces )
+	    private void ViewTree(string entry, int middleLine, out int countSpaces )
 	    {
-		    Console.ForegroundColor = ConsoleColor.Yellow;
-		    _sw.WriteLine(entry);
-		    Console.ResetColor();
-		    countSpaces = number;
+		    Console.ForegroundColor = ConsoleColor.DarkYellow;
+		    Console.WriteLine(entry);
+            Console.ResetColor();
+		    countSpaces = middleLine;
 		}
 
 	    internal void PrintDisks()
@@ -87,15 +82,10 @@ namespace ManagerDirectory.ConsoleView
 			    .ToList();
 
 		    foreach (var driver in drivers)
-			    _sw.WriteLine($@"Имя диска: {driver.Name}");
+			    Console.WriteLine($@"Имя диска: {driver.Name}");
 	    }
              
 
-        internal async Task OutputInfoFilesAndDirectoryAsync() => await Task.Run(() => _sw.WriteLine(_informingService));
-
-        public void Dispose()
-        {
-	        _sw?.Dispose();
-        }
+        internal async Task OutputInfoFilesAndDirectoryAsync() => await Task.Run(() => Console.WriteLine(_informingService));
     }
 }

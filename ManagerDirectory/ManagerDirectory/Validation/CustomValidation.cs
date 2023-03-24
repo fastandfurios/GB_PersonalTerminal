@@ -26,13 +26,15 @@ namespace ManagerDirectory.Validation
         }
 
 		internal async Task<string> CheckEnteredPathAsync(string defaultPath, string path)
-        {
+		{
+			var slash = '\\';
+
             return await Task.Run(() =>
             {
                 if (Directory.Exists(Path.Combine(defaultPath, path)))
                     return Path.Combine(defaultPath, path);
 
-                if ((Directory.Exists(path) || File.Exists(path)) && path.Contains('\\'))
+                if ((Directory.Exists(path) || File.Exists(path)) && path.Contains(slash))
                     return path;
 
                 return defaultPath;

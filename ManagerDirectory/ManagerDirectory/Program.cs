@@ -3,7 +3,6 @@ using System;
 using System.Threading.Tasks;
 using ManagerDirectory.ConsoleView;
 using ManagerDirectory.Infrastructure.Models;
-using ManagerDirectory.Infrastructure.Repositories;
 using ManagerDirectory.Services;
 using ManagerDirectory.Validation;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +11,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace ManagerDirectory
 {
-	class Program
+    class Program
 	{
 		static async Task Main(string[] args)
         {
@@ -36,7 +35,7 @@ namespace ManagerDirectory
             services.AddSingleton<ManagerService>();
             services.AddTransient<Receiver>();
             services.AddTransient<Displaying>();
-            services.AddTransient<Repository>();
+            services.AddTransient<SerializeDeserializeService>();
             services.AddTransient<CustomValidation>();
             services.AddTransient<InformingService>();
             services.AddTransient<CurrentPath>();
