@@ -14,18 +14,18 @@ namespace ManagerDirectory.ConsoleView
             _validation = validation;
         }
 
-        internal async Task<(string command, Uri path)> ReceiveAsync(Uri defaultPath)
+        internal async Task<(string command, string path)> ReceiveAsync(string defaultPath)
         {
             var bs = 512;
             using var sr = new StreamReader(Console.OpenStandardInput(), bufferSize: bs);
             var valid = true;
             var entries = new string[2];
             var command = string.Empty;
-            var path = new Uri(defaultPath.OriginalString);
+            var path = defaultPath;
 
             do
             {
-                Console.Write($@"{Environment.UserName}#{defaultPath.OriginalString}> ");
+                Console.Write($@"{Environment.UserName}#{defaultPath}> ");
                 entries = (await sr.ReadLineAsync())!
                     .Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
 
@@ -34,7 +34,7 @@ namespace ManagerDirectory.ConsoleView
                     command = entries[0];
 
                     if (entries.Length > 1)
-                        Uri.TryCreate(entries[1], UriKind.Relative, out path);
+                        path =entries[1];
 
                     valid = await _validation.CheckForCommandAsync(command);
                 }

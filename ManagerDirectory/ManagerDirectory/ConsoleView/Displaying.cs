@@ -1,32 +1,35 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using ManagerDirectory.Services;
 
 namespace ManagerDirectory.ConsoleView
 {
-    internal sealed class Displaying
+    internal sealed class Displaying : IDisposable
     {
 	    private int _countFiles, _countDirectories;
         private readonly InformingService _informingService;
+        private readonly StreamWriter _sw; 
 
         public Displaying(InformingService informingService)
         {
             _informingService = informingService;
-        }
+            _sw = new StreamWriter(Console.OpenStandardOutput(), bufferSize: 512, encoding: Encoding.UTF8);
+		}
 
-        internal async Task ViewTreeAsync(Uri path, int maxCountObjects)
+        internal async Task ViewTreeAsync(string path, int maxCountObjects)
 	    {
-		    var directoryInfo = new DirectoryInfo(path.OriginalString);
+		    var directoryInfo = new DirectoryInfo(path);
 		    var length = directoryInfo.Name.Length / 2;
 		    int countSpaces;
-            var countSelectors = path.OriginalString.Count(symb => symb == '\\');
+            var countSelectors = path.Count(symb => symb == '\\');
 
 			if (countSelectors > 2)
 				ViewTree(" ~\\" + directoryInfo.Name, directoryInfo.Name.Length / 2 + 2, out countSpaces);
 		    else
-				ViewTree(" " + path.OriginalString, path.OriginalString.Length - length, out countSpaces);
+				ViewTree(" " + path, path.Length - length, out countSpaces);
 			
 			await Task.Run(() =>
             {
@@ -34,12 +37,12 @@ namespace ManagerDirectory.ConsoleView
                 {
                     if (_countDirectories < maxCountObjects)
                     {
-                        Console.WriteLine($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}{directory.Name}");
+                        _sw.WriteLine($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}{directory.Name}");
                         _countDirectories++;
                     }
                     else
                     {
-                        Console.WriteLine($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}...");
+                        _sw.WriteLine($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}...");
                         break;
                     }
                 }
@@ -53,15 +56,15 @@ namespace ManagerDirectory.ConsoleView
                 {
                     if (_countFiles < maxCountObjects)
                     {
-                        Console.Write($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}");
+                        _sw.Write($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}");
                         Console.ForegroundColor = ConsoleColor.DarkGreen;
-                        Console.WriteLine($@"{file.Name}");
+                        _sw.WriteLine($@"{file.Name}");
                         Console.ResetColor();
                         _countFiles++;
                     }
                     else
                     {
-                        Console.Write($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}...");
+                        _sw.Write($@"{new string(' ', countSpaces)}|{new string('-', length + 1)}...");
                         break;
                     }
                 }
@@ -73,16 +76,26 @@ namespace ManagerDirectory.ConsoleView
 	    private void ViewTree(string entry, int number, out int countSpaces )
 	    {
 		    Console.ForegroundColor = ConsoleColor.Yellow;
-		    Console.WriteLine(entry);
+		    _sw.WriteLine(entry);
 		    Console.ResetColor();
 		    countSpaces = number;
 		}
-		
-	    internal async Task GetDisksAsync()
-            => await Task.Run(() => DriveInfo.GetDrives()
-                .ToList()
-                .ForEach(drive => Console.WriteLine($@"Имя диска: {drive.Name}")));
 
-        internal async Task OutputInfoFilesAndDirectoryAsync() => await Task.Run(() => Console.WriteLine(_informingService));
+	    internal void PrintDisks()
+	    {
+		    var drivers = DriveInfo.GetDrives()
+			    .ToList();
+
+		    foreach (var driver in drivers)
+			    _sw.WriteLine($@"Имя диска: {driver.Name}");
+	    }
+             
+
+        internal async Task OutputInfoFilesAndDirectoryAsync() => await Task.Run(() => _sw.WriteLine(_informingService));
+
+        public void Dispose()
+        {
+	        _sw?.Dispose();
+        }
     }
 }

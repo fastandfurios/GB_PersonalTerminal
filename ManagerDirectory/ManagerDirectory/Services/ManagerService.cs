@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ManagerDirectory.ConsoleView;
 using ManagerDirectory.Infrastructure.Models;
@@ -13,8 +14,8 @@ namespace ManagerDirectory.Services
     internal sealed class ManagerService
     {
         #region fields
-        private (string command, Uri path) _entry;
-        private Uri _defaultPath = new(Resources.DefaultPath);
+        private (string command, string path) _entry;
+        private string _defaultPath = Resources.DefaultPath;
         private readonly string _fileName = Resources.CurrentPath;
         private readonly string _fileLogErrors = Resources.FileLogErrors;
         private readonly Displaying _displaying;
@@ -23,6 +24,7 @@ namespace ManagerDirectory.Services
         private CurrentPath _currentPath;
         private readonly InformingService _informer;
         private readonly CustomValidation _validation;
+        private readonly StartService _startService;
         #endregion
 
         public ManagerService(Displaying displaying, 
@@ -30,57 +32,30 @@ namespace ManagerDirectory.Services
             Repository repository,
             CustomValidation validation,
             InformingService informer,
-            CurrentPath currentPath)
+            CurrentPath currentPath,
+            StartService startService)
         {
-            (_displaying, _receiver, _repository, _validation, _informer, _currentPath) = (displaying, receiver, repository, validation, informer, currentPath);
+            (_displaying, _receiver, _repository, _validation, _informer, _currentPath, _startService) = 
+	            (displaying, receiver, repository, validation, informer, currentPath, startService);
         }
-
-        public async Task StartAsync()
-        {
-            await Task.Run(async () =>
-            {
-                if(File.Exists(_fileName))
-                    _currentPath = await _repository.GetPathAsync(_fileName, _defaultPath);
-                else
-                {
-					File.Create(_fileName).Close();
-                    _currentPath.Path = _defaultPath.OriginalString;
-				}
-
-                foreach (var drive in DriveInfo.GetDrives())
-                {
-                    if (_currentPath.Path.Length > drive.Name.Length)
-                    {
-                        if (drive.Name.Equals(_currentPath.Path.Substring(0, 3)))
-                            return;
-                    }
-                    else
-                    {
-                        if (drive.Name.Equals(_currentPath.Path.Substring(0, _currentPath.Path.Length)))
-                            return;
-                    }
-                }
-
-                _currentPath.Path = _defaultPath.OriginalString;
-            });
-        }
-
+        
         public async Task RunAsync()
         {
+	        await _startService.StartAsync(_defaultPath);
+	        _currentPath.Path = _startService.GetCurrentPath();
+
             if (File.Exists(_fileName) && !string.IsNullOrEmpty(_currentPath.Path))
-                _defaultPath = new Uri(_currentPath.Path);
-
-            _entry = await _receiver.ReceiveAsync(_defaultPath);
-
-            await SwitchCommandAsync();
+                _defaultPath = _currentPath.Path;
         }
 
-        private async Task SwitchCommandAsync()
+        public async Task SwitchCommandAsync()
         {
-            try
+	        _entry = await _receiver.ReceiveAsync(_defaultPath);
+
+			try
             {
                 if (_entry.command.Contains(':'))
-                    _defaultPath = new Uri(Path.Combine(_entry.command, "\\"));
+                    _defaultPath = Path.Combine(_entry.command, "\\");
 
                 var path = _entry.path;
                 var newPath = string.Empty;
@@ -88,15 +63,15 @@ namespace ManagerDirectory.Services
                 switch (_entry.command)
                 {
                     case cm.DISK:
-                        await CallOutputAsync();
+	                    CallOutput();
                         break;
                     case cm.LS:
-                        path = await _validation.CheckEnteredPathAsync(_entry.path, _defaultPath);
+                        path = await _validation.CheckEnteredPathAsync(_defaultPath, _entry.path);
                         await CallOutputAsync(path, 10);
                         break;
                     case cm.LS_ALL:
-                        path = await _validation.CheckEnteredPathAsync(_entry.path, _defaultPath);
-                        await CallOutputAsync(path, Directory.GetDirectories(path.OriginalString).Length + Directory.GetFiles(path.OriginalString).Length);
+                        path = await _validation.CheckEnteredPathAsync(_defaultPath, _entry.path);
+                        await CallOutputAsync(path, Directory.EnumerateDirectories(path).Count() + Directory.EnumerateFiles(path).Count());
                         break;
                     case cm.CP:
                         //path = await TransformAsync(_entry.Remove(0, _entry.command.Length + 1));
@@ -108,15 +83,14 @@ namespace ManagerDirectory.Services
                         Console.Clear();
                         break;
                     case cm.CD:
-                        path = new Uri(Path.Combine(_entry.path.OriginalString, "\\"));
-                        _defaultPath = await _validation.CheckEnteredPathAsync(path, _defaultPath);
+                        path = Path.Combine(_defaultPath, _entry.path);
+                        _defaultPath = await _validation.CheckEnteredPathAsync(_defaultPath, path);
                         break;
                     case cm.CD_DOT:
-                        path = new Uri(_defaultPath.OriginalString.Remove(_defaultPath.OriginalString.Length - 1, 1));
-                        _defaultPath = new Uri(Directory.GetParent(path.OriginalString)!.FullName);
+	                    _defaultPath = Directory.GetParent(_defaultPath)!.FullName;
                         break;
                     case cm.CD_SLASH:
-                        _defaultPath = new Uri(Directory.GetDirectoryRoot(_defaultPath.OriginalString));
+                        _defaultPath = Directory.GetDirectoryRoot(_defaultPath);
                         break;
                     case cm.INFO:
                         await CallInformerAsync(_entry.command);
@@ -133,12 +107,12 @@ namespace ManagerDirectory.Services
                 if (_entry.command != cm.EXIT)
                 {
                     _currentPath.Path = string.Empty;
-                    await RunAsync();
+                    await SwitchCommandAsync();
                 }
                 else
                 {
-                    _currentPath.Path = _defaultPath.OriginalString;
-                    await _repository.SavePathAsync(_fileName);
+                    _currentPath.Path = _defaultPath;
+                    await _repository.SavePathAsync(_fileName, _currentPath.Path);
                 }
             }
             catch (Exception e)
@@ -146,17 +120,23 @@ namespace ManagerDirectory.Services
                 Console.WriteLine(e.Message);
                 await File.AppendAllTextAsync(_fileLogErrors, $"{DateTime.Now:G} {e.Message} {e.TargetSite}");
                 await File.AppendAllTextAsync(_fileLogErrors, Environment.NewLine);
-                await RunAsync();
+                await SwitchCommandAsync();
             }
         }
 
-        private async Task CallOutputAsync()
-            => await _displaying.GetDisksAsync();
+        private void CallOutput()
+        {
+	        _displaying.PrintDisks();
+            _displaying.Dispose();
+        }
 
-        private async Task CallOutputAsync(Uri path, int maxObjects)
-            => await _displaying.ViewTreeAsync(path, maxObjects);
+        private async Task CallOutputAsync(string path, int maxObjects)
+        {
+	        await _displaying.ViewTreeAsync(path, maxObjects);
+            _displaying.Dispose();
+		}
 
-        private async Task CallCopyingAsync(string name, Uri newPath)
+        private async Task CallCopyingAsync(string name, string newPath)
         {
             var copying = new CopyingService();
             await copying.CopyAsync(_defaultPath, name, newPath);
@@ -168,7 +148,7 @@ namespace ManagerDirectory.Services
 
             var deletion = new RemovingService();
 
-            if (!string.IsNullOrEmpty(Path.GetExtension(entry.OriginalString)))
+            if (!string.IsNullOrEmpty(Path.GetExtension(entry)))
                 deletion.FullPathFile = entry;
             else
                 deletion.FullPathDirectory = entry;
@@ -176,14 +156,14 @@ namespace ManagerDirectory.Services
 
         private async Task CallInformerAsync(string command)
         {
-            Uri path;
+            string path;
 
             if (_entry.command.Length == command.Length)
                 path = _defaultPath;
             else
                 path = await _validation.CheckEnteredPathAsync(_entry.path, _defaultPath);
 
-            if (!string.IsNullOrEmpty(Path.GetExtension(path.OriginalString)))
+            if (!string.IsNullOrEmpty(Path.GetExtension(path)))
             {
                 _informer.FullPathFile = path;
                 _informer.FullPathDirectory = null;

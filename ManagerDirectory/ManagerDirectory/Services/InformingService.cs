@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ManagerDirectory.Enums;
@@ -8,15 +7,15 @@ namespace ManagerDirectory.Services
 {
     public class InformingService
     {
-        private Uri _fullPathFile;
-        public Uri FullPathFile
+        private string _fullPathFile;
+        public string FullPathFile
         {
             get => _fullPathFile;
             set => _fullPathFile = value;
         }
 
-        private Uri _fullPathDirectory;
-        public Uri FullPathDirectory
+        private string _fullPathDirectory;
+        public string FullPathDirectory
         {
             get => _fullPathDirectory;
             set => _fullPathDirectory = value;
@@ -24,9 +23,9 @@ namespace ManagerDirectory.Services
 
         public override string ToString()
         {
-            if (!string.IsNullOrEmpty(_fullPathDirectory.OriginalString) && Path.GetExtension(_fullPathDirectory.OriginalString) == string.Empty)
+            if (!string.IsNullOrEmpty(_fullPathDirectory) && Path.GetExtension(_fullPathDirectory) == string.Empty)
             {
-                var directoryInfo = new DirectoryInfo(_fullPathDirectory.OriginalString);
+                var directoryInfo = new DirectoryInfo(_fullPathDirectory);
                 var countDirectory = directoryInfo.EnumerateDirectories("*", SearchOption.AllDirectories).Count();
                 var countFiles = directoryInfo.EnumerateFiles("*.*", SearchOption.AllDirectories).Count();
                 long size = 0;
@@ -41,9 +40,9 @@ namespace ManagerDirectory.Services
             }
             else
             {
-                var fileInfo = new FileInfo(_fullPathFile.OriginalString);
+                var fileInfo = new FileInfo(_fullPathFile);
 
-                return $"Имя: {Path.GetFileNameWithoutExtension(_fullPathFile.OriginalString)}\n" +
+                return $"Имя: {Path.GetFileNameWithoutExtension(_fullPathFile)}\n" +
                        $"Расширение: {fileInfo.Extension}\n" +
                        $"Размер: {ConvertAsync(fileInfo.Length).GetAwaiter().GetResult()}";
             }

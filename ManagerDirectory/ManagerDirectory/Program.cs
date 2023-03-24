@@ -16,14 +16,14 @@ namespace ManagerDirectory
 	{
 		static async Task Main(string[] args)
         {
-            using IHost host = CreateHostBuilder(args).Build();
+	        Console.Title = "PersonalTerminal";
 
-            Console.Title = "PersonalTerminal";
-
+			using IHost host = CreateHostBuilder(args).Build();
+            
             if (host.Services.GetService(typeof(ManagerService)) is ManagerService manager)
             {
                 await manager.RunAsync();
-                await manager.StartAsync();
+                await manager.SwitchCommandAsync();
             }
         }
 
@@ -40,6 +40,7 @@ namespace ManagerDirectory
             services.AddTransient<CustomValidation>();
             services.AddTransient<InformingService>();
             services.AddTransient<CurrentPath>();
+            services.AddTransient<StartService>();
         }
     }
 }

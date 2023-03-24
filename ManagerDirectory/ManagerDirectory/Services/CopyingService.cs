@@ -7,14 +7,14 @@ namespace ManagerDirectory.Services
 {
     internal sealed class CopyingService
     {
-        internal async Task CopyAsync(Uri oldPath, string name, Uri newPath)
+        internal async Task CopyAsync(string oldPath, string name, string newPath)
         {
             if (!string.IsNullOrEmpty(Path.GetExtension(name)))
             {
                 await Task.Run(() =>
                 {
-                    Directory.EnumerateFiles(oldPath.OriginalString, name, SearchOption.TopDirectoryOnly).ToList().ForEach(file =>
-                        File.Copy(file, file.Replace(oldPath.OriginalString, newPath.OriginalString), true));
+                    Directory.EnumerateFiles(oldPath, name, SearchOption.TopDirectoryOnly).ToList().ForEach(file =>
+                        File.Copy(file, file.Replace(oldPath, newPath), true));
 
                     Console.WriteLine("Копирование прошло успешно!");
                 });
@@ -24,14 +24,14 @@ namespace ManagerDirectory.Services
                 await Task.WhenAll(
                     Task.Run(() =>
                     {
-                        Directory.EnumerateDirectories(oldPath.OriginalString, name, SearchOption.TopDirectoryOnly).ToList().ForEach(directory =>
-                            Directory.CreateDirectory(directory.Replace(oldPath.OriginalString, newPath.OriginalString)));
+                        Directory.EnumerateDirectories(oldPath, name, SearchOption.TopDirectoryOnly).ToList().ForEach(directory =>
+                            Directory.CreateDirectory(directory.Replace(oldPath, newPath)));
 
                     }),
                     Task.Run(() =>
                     {
                         Directory.EnumerateFiles(oldPath + name, "*.*", SearchOption.TopDirectoryOnly).ToList().ForEach(file =>
-                            File.Copy(file, file.Replace(oldPath.OriginalString, newPath.OriginalString), true));
+                            File.Copy(file, file.Replace(oldPath, newPath), true));
 
                         Console.WriteLine("Копирование прошло успешно!");
                     }));

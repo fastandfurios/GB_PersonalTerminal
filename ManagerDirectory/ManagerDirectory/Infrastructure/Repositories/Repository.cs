@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ManagerDirectory.Infrastructure.Models;
@@ -7,7 +6,7 @@ using ManagerDirectory.Properties;
 
 namespace ManagerDirectory.Infrastructure.Repositories
 {
-    internal sealed class Repository
+	public class Repository
     {
         private readonly CurrentPath _currentPath;
 
@@ -16,7 +15,7 @@ namespace ManagerDirectory.Infrastructure.Repositories
             _currentPath = currentPath;
         }
 
-        internal async Task<CurrentPath> GetPathAsync(string fileName, Uri defaultPath)
+        internal async Task<CurrentPath> GetPathAsync(string fileName, string defaultPath)
 		{
             try
             {
@@ -25,13 +24,14 @@ namespace ManagerDirectory.Infrastructure.Repositories
             }
             catch
             {
-                _currentPath.Path = defaultPath.OriginalString;
+                _currentPath.Path = defaultPath;
                 return _currentPath;
             }
         }
 
-        internal async Task SavePathAsync(string fileName)
+        internal async Task SavePathAsync(string fileName, string currentPath)
         {
+	        _currentPath.Path = currentPath;
             await using var fileStream = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             await JsonSerializer.SerializeAsync(fileStream, _currentPath, typeof(CurrentPath));
         }
